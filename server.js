@@ -10,7 +10,7 @@ function displayLobby() {
     // 타이틀 텍스트
     console.log(
         chalk.cyan(
-            figlet.textSync('RL- Javascript', {
+            figlet.textSync('RL- Javascript\nDefence Game', {
                 font: 'Standard',
                 horizontalLayout: 'default',
                 verticalLayout: 'default'
@@ -18,12 +18,34 @@ function displayLobby() {
         )
     );
 
+    //아스키 아트
+    console.log();
+    console.log(chalk.white('                                  |>>>'));
+    console.log(chalk.white('                                  |'));
+    console.log(chalk.white('                    |>>>      _  _|_  _         |>>>'));
+    console.log(chalk.white('                    |        |;| |;| |;|        |'));
+    console.log(chalk.white('                _  _|_  _    \\\\.    .  /    _  _|_  _'));
+    console.log(chalk.white('               |;|_|;|_|;|    \\\\:. ,  /    |;|_|;|_|;|'));
+    console.log(chalk.white('               \\\\..      /    ||;   . |    \\\\.    .  /'));
+    console.log(chalk.white('                \\\\.  ,  /     ||:  .  |     \\\\:  .  /'));
+    console.log(chalk.white('                 ||:   |_   _ ||_ . _ | _   _||:   |'));
+    console.log(chalk.white('                 ||:  .|||_|;|_|;|_|;|_|;|_|;||:.  |'));
+    console.log(chalk.white('                 ||:   ||.    .     .      . ||:  .|'));
+    console.log(chalk.white('                 ||: . || .     . .   .  ,   ||:   |       \\,/'));
+    console.log(chalk.white('                 ||:   ||:  ,  _______   .   ||: , |            /`\\ '));
+    console.log(chalk.white('                 ||:   || .   /+++++++\\    . ||:   |'));
+    console.log(chalk.white('                 ||:   ||.    |+++++++| .    ||: . |'));
+    console.log(chalk.white('              __ ||: . ||: ,  |+++++++|.  . _||_   |'));
+    console.log(chalk.white('   ___ _--`~     \'--~~__|.    |+++++__|----~    ~`---,              ___'));
+    console.log(chalk.white('-~--~                   ~---__|,--~\'                  ~~----_____-~\'  '));
+    console.log();
+
     // 상단 경계선
     const line = chalk.magentaBright('='.repeat(50));
     console.log(line);
 
     // 게임 이름
-    console.log(chalk.yellowBright.bold('CLI 게임에 오신것을 환영합니다!'));
+    console.log(chalk.yellowBright.bold('CLI 로그라이크 디펜스 게임에 오신것을 환영합니다!'));
 
     // 설명 텍스트
     console.log(chalk.green('옵션을 선택해주세요.'));
@@ -32,7 +54,7 @@ function displayLobby() {
     // 옵션들
     console.log(chalk.blue('1.') + chalk.white(' 새로운 게임 시작'));
     console.log(chalk.blue('2.') + chalk.white(' 업적 확인하기'));
-    console.log(chalk.blue('3.') + chalk.white(' 옵션'));
+    console.log(chalk.blue('3.') + chalk.white(' 난이도 설정'));
     console.log(chalk.blue('4.') + chalk.white(' 종료'));
 
     // 하단 경계선
