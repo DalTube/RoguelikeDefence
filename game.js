@@ -22,6 +22,9 @@ class Monster {
 }
 
 function displayStatus(stage, player, monster) {
+    const line = chalk.magentaBright('='.repeat(71));
+    let imogi = '🗡️';
+    let imogi2 = ' ';
   console.log(chalk.magentaBright(`\n=== Current Status ===`));
   console.log(
     chalk.cyanBright(`| Stage: ${stage} `) +
@@ -32,7 +35,55 @@ function displayStatus(stage, player, monster) {
       `| 몬스터 정보 |`,
     ),
   );
-  console.log(chalk.magentaBright(`=====================\n`));
+console.log(chalk.magentaBright(`=====================\n`));
+
+//백업용
+// console.log(line);
+// console.log(chalk.white('                   _____'));  
+// console.log(chalk.white('                  <_____|'));
+// console.log(chalk.white('                        |'));  
+// console.log(chalk.white('  ___                  .|'));
+// console.log(chalk.white(' <___|               .\'/`\`.'));
+// console.log(chalk.white('  _  |  _   _      .\' / :`.\`.'));
+// console.log(chalk.white('_|;|_|_|;|_|;|__ .\'  /  : .\'|_')); 
+// console.log(chalk.white('     |          --------.\' .\'|'));
+// console.log(chalk.white('   / ^\\         | |###| |.\'  |'));
+// console.log(chalk.white(`  /  | \\     .\'        .\'    |`));
+// console.log(chalk.white(` /   |  \\  .\'        .\'      |`));
+// console.log(chalk.white('/____|___\\\'        .\'        |')); 
+// console.log(chalk.white('|         |      .\' ㅡ\\     .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _'));
+// console.log(chalk.white('|    _    |    .\'  /+++|  .\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+// console.log(chalk.white('|   |#|   |  .\'   ㅣ+++|.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+// console.log(chalk.white('|  =====  |.\'     ㅣ++.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+// console.log(chalk.white('|         |       ㅣ.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+// console.log(chalk.white('|         |      .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+// console.log(chalk.white('|         |    .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+// console.log(chalk.white('|         |  .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __'));
+// console.log(chalk.white('|_________|.\'                                                         \n'));
+// console.log(line);
+console.log(line);
+console.log(chalk.white('                   _____'));  
+console.log(chalk.white('                  <_____|'));
+console.log(chalk.white('                        |'));  
+console.log(chalk.white('  ___                  .|'));
+console.log(chalk.white(' <___|               .\'/`\`.'));
+console.log(chalk.white('  _  |  _   _      .\' / :`.\`.'));
+console.log(chalk.white('_|;|_|_|;|_|;|__ .\'  /  : .\'|_')); 
+console.log(chalk.white('     |          --------.\' .\'|'));
+console.log(chalk.white('   / ^\\         | |###| |.\'  |'));
+console.log(chalk.white(`  /  | \\     .\'        .\'    |`));
+console.log(chalk.white(` /   |  \\  .\'        .\'      |`));
+console.log(chalk.white('/____|___\\\'        .\'        |')); 
+console.log(chalk.white('|         |      .\' ㅡ\\     .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _'));
+console.log(chalk.white('|    _    |    .\'  /+++|  .\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+console.log(chalk.white('|   |#|   |  .\'   ㅣ+++|.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+console.log(chalk.white('|  =====  |.\'     ㅣ++.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+console.log(chalk.white('|         |       ㅣ.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+console.log(chalk.white('|         |      .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+console.log(chalk.white('|         |    .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
+console.log(chalk.white('|         |  .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __'));
+console.log(chalk.white('|_________|.\'                                                         \n'));
+console.log(line);
 }
 
 const battle = async (stage, player, monster) => {
@@ -53,6 +104,7 @@ const battle = async (stage, player, monster) => {
 
     // 플레이어의 선택에 따라 다음 행동 처리
     logs.push(chalk.green(`${choice}를 선택하셨습니다.`));
+    process.exit(0);
   }
   
 };

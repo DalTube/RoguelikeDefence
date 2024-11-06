@@ -24,13 +24,13 @@ function displayLobby() {
     console.log(chalk.white('                                  |'));
     console.log(chalk.white('                    |>>>      _  _|_  _         |>>>'));
     console.log(chalk.white('                    |        |;| |;| |;|        |'));
-    console.log(chalk.white('                _  _|_  _    \\\\.    .  /    _  _|_  _'));
+    console.log(chalk.white('   \\,/          _  _|_  _    \\\\.    .  /    _  _|_  _'));
     console.log(chalk.white('               |;|_|;|_|;|    \\\\:. ,  /    |;|_|;|_|;|'));
     console.log(chalk.white('               \\\\..      /    ||;   . |    \\\\.    .  /'));
     console.log(chalk.white('                \\\\.  ,  /     ||:  .  |     \\\\:  .  /'));
     console.log(chalk.white('                 ||:   |_   _ ||_ . _ | _   _||:   |'));
     console.log(chalk.white('                 ||:  .|||_|;|_|;|_|;|_|;|_|;||:.  |'));
-    console.log(chalk.white('                 ||:   ||.    .     .      . ||:  .|'));
+    console.log(chalk.white('     /`\\         ||:   ||.    .     .      . ||:  .|'));
     console.log(chalk.white('                 ||: . || .     . .   .  ,   ||:   |       \\,/'));
     console.log(chalk.white('                 ||:   ||:  ,  _______   .   ||: , |            /`\\ '));
     console.log(chalk.white('                 ||:   || .   /+++++++\\    . ||:   |'));
@@ -41,11 +41,12 @@ function displayLobby() {
     console.log();
 
     // 상단 경계선
-    const line = chalk.magentaBright('='.repeat(50));
+    const line = chalk.magentaBright('='.repeat(71)+'\n');
     console.log(line);
 
     // 게임 이름
-    console.log(chalk.yellowBright.bold('CLI 로그라이크 디펜스 게임에 오신것을 환영합니다!'));
+    console.log(chalk.yellowBright.bold('CLI 로그라이크 디펜스 게임에 오신것을 환영합니다!🙃'));
+    console.log(chalk.white('𓀀𓀨𓀱 𓎎 𓎬 🐉'));
 
     // 설명 텍스트
     console.log(chalk.green('옵션을 선택해주세요.'));
@@ -57,6 +58,8 @@ function displayLobby() {
     console.log(chalk.blue('3.') + chalk.white(' 난이도 설정'));
     console.log(chalk.blue('4.') + chalk.white(' 종료'));
 
+    console.log(chalk.bgWhite(chalk.blue('4.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')));
+
     // 하단 경계선
     console.log(line);
 
@@ -66,8 +69,10 @@ function displayLobby() {
 
 // 유저 입력을 받아 처리하는 함수
 function handleUserInput() {
+    
     const choice = readlineSync.question('입력: ');
-
+    console.clear();
+    
     switch (choice) {
         case '1':
             console.log(chalk.green('게임을 시작합니다.'));
