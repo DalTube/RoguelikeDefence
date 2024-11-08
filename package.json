@@ -1,22 +1,22 @@
 {
-  "name": "roguelikedefence",
-  "version": "1.0.0",
-  "description": "CLI기반 로그라이크 디펜스 게임",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start" : "chcp 65001 && node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "chalk": "^5.3.0",
-    "figlet": "^1.8.0",
-    "readline-sync": "^1.4.10"
-  },
-  "devDependencies": {
-    "prettier": "^3.3.3"
-  }
+   "name": "roguelikedefence",
+   "version": "1.0.0",
+   "description": "CLI기반 로그라이크 디펜스 게임",
+   "main": "index.js",
+   "type": "module",
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "start": "chcp 65001 && title Castle Defense Game && node server.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+   "dependencies": {
+      "chalk": "^5.3.0",
+      "figlet": "^1.8.0",
+      "readline-sync": "^1.4.10"
+   },
+   "devDependencies": {
+      "prettier": "^3.3.3"
+   }
 }
