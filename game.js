@@ -16,17 +16,15 @@ function displayStatus(stage, wave, turn, castle, monsters) {
    console.log(chalk.blueBright(`| 성 내구도 ${castle.hp}`));
    console.log(chalk.blueBright(`| 유닛 정보 종류 등급 개수 공격력 `));
    if (monsters.length > 0) {
-      console.log(
-         chalk.redBright(
-            `| 몬스터 정보 이름 HP 공격력 ${monsters[0]['name']} ${monsters[0]['hp']} ${monsters[0]['damage']}|`,
-         ),
-      );
+      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 ${monsters[0]['name']} ${monsters[0]['hp']} ${monsters[0]['damage']}|`));
    } else {
       console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 |`));
    }
-
    console.log(chalk.magentaBright(`=====================\n`));
+}
 
+function displayMap(locUnits) {
+   const line = chalk.magentaBright('='.repeat(71));
    //백업용
    // console.log(line);
    // console.log(chalk.white('                   _____'));
@@ -51,34 +49,36 @@ function displayStatus(stage, wave, turn, castle, monsters) {
    // console.log(chalk.white('|         |  .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __'));
    // console.log(chalk.white('|_________|.\'                                                         \n'));
    // console.log(line);
-   console.log(line);
-   console.log(chalk.white('                   _____'));
-   console.log(chalk.white('                  <_____|'));
-   console.log(chalk.white('                        |'));
-   console.log(chalk.white('  ___                  .|'));
-   console.log(chalk.white(" <___|               .'/``."));
-   console.log(chalk.white("  _  |  _   _      .' / :`.`."));
-   console.log(chalk.white("_|;|_|_|;|_|;|__ .'  /  : .'|_"));
-   console.log(chalk.white("     |          --------.' .'|"));
-   console.log(chalk.white("   / ^ \\        | |###| |.'  |"));
-   console.log(chalk.white(`  /  |  \\     .\'       .\'    |`));
-   console.log(chalk.white(` /   |   \\  .\'       .\'      |`));
-   console.log(chalk.white("/____|____\\'       .'        |"));
-   console.log(
-      chalk.white("|         |      .' ㅡ\\     .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"),
-   );
-   console.log(chalk.white("|    _    |    .'  /+++|  .'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
-   console.log(chalk.white("|   |#|   |  .'   ㅣ+++|.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
-   console.log(chalk.white("|  =====  |.'     ㅣ++.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
-   console.log(chalk.white("|         |       ㅣ.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
-   console.log(chalk.white("|         |      .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
-   console.log(chalk.white("|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
-   console.log(
-      chalk.white("|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __"),
-   );
-   console.log(
-      chalk.white("|_________|.'                                                         \n"),
-   );
+   //
+   // console.log(chalk.white('                   _____'));
+   // console.log(chalk.white('                  <_____|'));
+   // console.log(chalk.white('                        |'));
+   // console.log(chalk.white('  ___                  .|'));
+   // console.log(chalk.white(" <___|               .'/``."));
+   // console.log(chalk.white("  _  |  _   _      .' / :`.`."));
+   // console.log(chalk.white("_|;|_|_|;|_|;|__ .'  /  : .'|_"));
+   // console.log(chalk.white("     |          --------.' .'|"));
+   // console.log(chalk.white("   / ^ \\        | |###| |.'  |"));
+   // console.log(chalk.white(`  /  |  \\     .\'    ${locUnits[0][1]['name']}${locUnits[0][0]['name']}   .\'    |`));
+   // console.log(chalk.white(` /   |   \\  .\'      ${locUnits[1][1]['name']}${locUnits[1][0]['name']} .\'      |`));
+   // console.log(chalk.white(`/____|____\\'    ${locUnits[2][1]['name']}${locUnits[2][0]['name']}   .'        |`));
+   // console.log(chalk.white(`|         |     ${locUnits[3][1]['name']}${locUnits[3][0]['name']} .' ㅡ\\     .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _`));
+   // console.log(chalk.white(`|    _    |    ${locUnits[4][1]['name']}${locUnits[4][0]['name']}.'  /+++|  .'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
+   // console.log(chalk.white(`|   |#|   |${locUnits[5][1]['name']}${locUnits[5][0]['name']}  .'   ㅣ+++|.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
+   // console.log(chalk.white(`|  =====  |.'     ㅣ++.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
+   // console.log(chalk.white(`|         |       ㅣ.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
+   // console.log(chalk.white(`|         |      .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
+   // console.log(chalk.white(`|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
+   // console.log(chalk.white(`|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __`));
+   // console.log(chalk.white(`|_________|.'                                                         \n`));
+
+   //---------------------------       버퍼                       원거리                        근접
+   console.log(chalk.white(`| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} |          | | | | | | | |`));
+   console.log(chalk.white(`| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} |          | | | | | | | |`));
+   console.log(chalk.white(`| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} |          | | | | | | | |`));
+   console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} |          | | | | | | | |`));
+   console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} |          | | | | | | | |`));
+   console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} |          | | | | | | | |`));
    console.log(line);
 }
 
@@ -90,35 +90,32 @@ const battle = async (stage, castle, isWin) => {
 
    let monsters = []; //몬스터 생성
    let locMonsters = [6][7];
-   let locUnits = [6][2]; //줄/열
+   // let locUnits = [6][2]; //줄/열
+   let locUnits = [
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+   ];
    let units = [];
 
    let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리']; //기본 선택지
    let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합']; //조합 선택지
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
 
-   //첫 턴에는 1마리 리스폰
-   const monster1 = new Monster('오우거', 0, 'D', 5, 10, 10);
-   const unit1 = new Unit('앙', 0, 1, 1, 10);
-   units.push(unit1);
-
-   //monsters.push(monster1);
-
    while (castle.hp > 0 && !isStageClear) {
       console.clear();
 
       //상단 Display출력
       displayStatus(stage, wave, turn, castle, monsters);
-
+      displayMap(locUnits);
       //Logs 출력
       logs.forEach((log) => console.log(log));
 
       //기본 선택문
-      console.log(
-         chalk.green(
-            `\n1. ${choiseStr[0]} 2. ${choiseStr[1]} 3. ${choiseStr[2]} 4. ${choiseStr[3]}`,
-         ),
-      );
+      console.log(chalk.green(`\n1. ${choiseStr[0]} 2. ${choiseStr[1]} 3. ${choiseStr[2]} 4. ${choiseStr[3]}`));
       const choice = readlineSync.question('당신의 선택은? ');
 
       // 플레이어의 선택에 따라 다음 행동 처리
@@ -132,14 +129,21 @@ const battle = async (stage, castle, isWin) => {
                case '1':
                case '2':
                case '3':
-                  createUnit(logs, units, choiceUnit);
-                  logsPush(
-                     logs,
-                     chalk.green(
-                        `[${choiseStr[choice - 1]}] ${unitStr[choiceUnit - 1]} 유닛을 소환하셨습니다.`,
-                     ),
-                  );
-                  break;
+                  let isCreate = false;
+                  for (let i = 0; i < locUnits.length; i++) {
+                     if (!locUnits[i][Number(choiceUnit) - 1]) {
+                        locUnits[i][Number(choiceUnit) - 1] = new Unit(unitStr[choiceUnit - 1], choiceUnit - 1, 1, choiceUnit === 1 ? 2 : choiceUnit === 2 ? 1 : 0, 10);
+                        isCreate = true;
+                        break;
+                     }
+                  }
+                  if (isCreate) {
+                     logsPush(logs, chalk.green(`[${choiseStr[choice - 1]}] ${unitStr[choiceUnit - 1]} 유닛을 소환하셨습니다.`));
+                     break;
+                  } else {
+                     logsPush(logs, chalk.red(`${unitStr[choice - 1]} 유닛을 더 이상 소환할 수 없습니다.(최대 6)`));
+                     continue;
+                  }
                case '4':
                   continue;
                default:
@@ -172,11 +176,7 @@ const battle = async (stage, castle, isWin) => {
             break;
          case '3':
             //아이템
-            console.log(
-               chalk.green(
-                  `\n1. ${Items.ITEM_CODE01_NAME} 2. ${Items.ITEM_CODE02_NAME} 3. ${Items.ITEM_CODE03_NAME} 4. 취소`,
-               ),
-            );
+            console.log(chalk.green(`\n1. ${Items.ITEM_CODE01_NAME} 2. ${Items.ITEM_CODE02_NAME} 3. ${Items.ITEM_CODE03_NAME} 4. 취소`));
             const choiceItem = readlineSync.question('당신의 선택은? ');
             useItem(choiceItem);
             break;
@@ -246,11 +246,8 @@ export async function startGame() {
 }
 
 //유닛 생성
-const createUnit = (logs, units, idx) => {
-   logsPush(logs, this);
-   logsPush(logs, units);
-   // console.log(this);
-   // console.log(units);
+const createUnit = (units, idx) => {
+   // new Unit('', idx - 1, 1, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
 };
 
 //유닛 조합
