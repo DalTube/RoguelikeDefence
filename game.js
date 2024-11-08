@@ -349,9 +349,11 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                   if (locMonsters[j][k - 1].hp <= 0) {
                      logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
-                  } else {
-                     logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                     Settings.killCount++;
                   }
+                  // else {
+                  // logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                  // }
 
                   isAttack = true;
                   break;
@@ -369,9 +371,11 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                         if (locMonsters[j][k - 1].hp <= 0) {
                            logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                            locMonsters[j][k - 1] = false;
-                        } else {
-                           logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                           Settings.killCount++;
                         }
+                        // else {
+                        // logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                        // }
                         isAttack = true;
                         break;
                      }
@@ -421,6 +425,21 @@ function checkItem(idx) {
    //있으면 사용
    //없으면
 }
+
+const checkAchievement = () => {
+   /***
+    * 몹 처치수 업적
+    */
+   Settings.killCount;
+
+   /***
+    * 난이도 업적
+    */
+
+   /***
+    * 조합 업적
+    */
+};
 
 function endGame(isWin) {
    if (isWin) {
