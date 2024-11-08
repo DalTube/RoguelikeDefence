@@ -7,7 +7,7 @@ import * as Items from './constants/items.js';
 import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
 
-function displayStatus(stage, wave, turn, castle, monsters) {
+function displayStatus(stage, wave, turn, castle, locMonsters) {
    const line = chalk.magentaBright('='.repeat(71));
    let imogi = '🗡️';
    let imogi2 = ' ';
@@ -15,8 +15,8 @@ function displayStatus(stage, wave, turn, castle, monsters) {
    console.log(chalk.cyanBright(`| Stage: ${stage} Wave: ${wave} Next Wave: ${turn} 턴`));
    console.log(chalk.blueBright(`| 성 내구도 ${castle.hp}`));
    console.log(chalk.blueBright(`| 유닛 정보 종류 등급 개수 공격력 `));
-   if (monsters.length > 0) {
-      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 ${monsters[0]['name']} ${monsters[0]['hp']} ${monsters[0]['damage']}|`));
+   if (locMonsters.length > 0) {
+      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 ${locMonsters[0][0]['name']} ${locMonsters[0][0]['hp']} ${locMonsters[0][0]['damage']}|`));
    } else {
       console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 |`));
    }
@@ -166,7 +166,7 @@ const battle = async (stage, castle, isWin) => {
                case '1':
                case '2':
                case '3':
-                  let isCreate = createUnit(locUnits, choiceUnit, unitStr);
+                  let isCreate = createUnit(locUnits, Number(choiceUnit), unitStr);
                   if (isCreate) {
                      logsPush(logs, chalk.green(`[${choiseStr[choice - 1]}] ${unitStr[choiceUnit - 1]} 유닛을 소환하셨습니다.`));
                      break;
@@ -283,7 +283,7 @@ export async function startGame() {
 const createUnit = (locUnits, idx, unitStr) => {
    for (let i = 0; i < locUnits.length; i++) {
       if (!locUnits[i][Number(idx) - 1]) {
-         locUnits[i][Number(idx) - 1] = new Unit(unitStr[idx - 1], idx - 1, 1, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
+         locUnits[i][Number(idx) - 1] = new Unit(unitStr[idx - 1] + (i + 1), idx - 1, 1, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
          return true;
       }
    }
@@ -345,14 +345,15 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
             for (let k = range; k > 0; k--) {
                if (locMonsters[j][k - 1]) {
                   locMonsters[j][k - 1].hp -= locUnits[j][i].attack();
-
                   //처치 시 삭제
                   if (locMonsters[j][k - 1].hp <= 0) {
                      logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
-                  } else {
-                     logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                     Settings.killCount++;
                   }
+                  // else {
+                  // logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                  // }
 
                   isAttack = true;
                   break;
@@ -370,10 +371,11 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                         if (locMonsters[j][k - 1].hp <= 0) {
                            logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                            locMonsters[j][k - 1] = false;
-                        } else {
-                           logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                           Settings.killCount++;
                         }
-
+                        // else {
+                        // logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
+                        // }
                         isAttack = true;
                         break;
                      }
@@ -423,6 +425,21 @@ function checkItem(idx) {
    //있으면 사용
    //없으면
 }
+
+const checkAchievement = () => {
+   /***
+    * 몹 처치수 업적
+    */
+   Settings.killCount;
+
+   /***
+    * 난이도 업적
+    */
+
+   /***
+    * 조합 업적
+    */
+};
 
 function endGame(isWin) {
    if (isWin) {
