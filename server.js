@@ -5,7 +5,7 @@ import { startGame } from './game.js';
 import { exec } from 'child_process'; //콘솔 제어
 
 async function displayChage() {
-   await exec('mode con: cols=80 lines=55', (error, stdout, stderr) => {
+   await exec('mode con: cols=150 lines=55', (error, stdout, stderr) => {
       if (error) {
          console.error(`Error resizing cmd: ${error.message}`);
          process.exit(0);
@@ -44,18 +44,12 @@ function displayLobby() {
    console.log(chalk.white('                 ||:  .|||_|;|_|;|_|;|_|;|_|;||:.  |'));
    console.log(chalk.white('     /`\\         ||:   ||.    .     .      . ||:  .|'));
    console.log(chalk.white('                 ||: . || .     . .   .  ,   ||:   |       \\,/'));
-   console.log(
-      chalk.white('                 ||:   ||:  ,  _______   .   ||: , |            /`\\ '),
-   );
+   console.log(chalk.white('                 ||:   ||:  ,  _______   .   ||: , |            /`\\ '));
    console.log(chalk.white('                 ||:   || .   /+++++++\\    . ||:   |'));
    console.log(chalk.white('                 ||:   ||.    |+++++++| .    ||: . |'));
    console.log(chalk.white('              __ ||: . ||: ,  |+++++++|.  . _||_   |'));
-   console.log(
-      chalk.white("   ___ _--`~     '--~~__|.    |+++++__|----~    ~`---,              ___"),
-   );
-   console.log(
-      chalk.white("-~--~                   ~---__|,--~'                  ~~----_____-~'  "),
-   );
+   console.log(chalk.white("   ___ _--`~     '--~~__|.    |+++++__|----~    ~`---,              ___"));
+   console.log(chalk.white("-~--~                   ~---__|,--~'                  ~~----_____-~'  "));
    console.log();
 
    // 상단 경계선
