@@ -89,6 +89,8 @@ const battle = async (stage, castle, isWin) => {
    let isStageClear = false;
 
    let monsters = []; //몬스터 생성
+   let locMonsters = [6][7];
+   let locUnits = [6][2]; //줄/열
    let units = [];
 
    let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리']; //기본 선택지
@@ -97,6 +99,9 @@ const battle = async (stage, castle, isWin) => {
 
    //첫 턴에는 1마리 리스폰
    const monster1 = new Monster('오우거', 0, 'D', 5, 10, 10);
+   const unit1 = new Unit('앙', 0, 1, 1, 10);
+   units.push(unit1);
+
    //monsters.push(monster1);
 
    while (castle.hp > 0 && !isStageClear) {
@@ -127,7 +132,7 @@ const battle = async (stage, castle, isWin) => {
                case '1':
                case '2':
                case '3':
-                  createUnit(units, choiceUnit);
+                  createUnit(logs, units, choiceUnit);
                   logsPush(
                      logs,
                      chalk.green(
@@ -241,7 +246,12 @@ export async function startGame() {
 }
 
 //유닛 생성
-function createUnit(units, idx) {}
+const createUnit = (logs, units, idx) => {
+   logsPush(logs, this);
+   logsPush(logs, units);
+   // console.log(this);
+   // console.log(units);
+};
 
 //유닛 조합
 function mixUnit(idx) {
