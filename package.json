@@ -6,7 +6,8 @@
    "type": "module",
    "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1",
-      "start": "chcp 65001 && title Castle Defense Game && node server.js"
+      "start": "chcp 65001 && title Castle Defense Game && node server.js",
+      "dev": "chcp 65001 && title Castle Defense Game && nodemon server.js"
    },
    "keywords": [],
    "author": "",
@@ -17,6 +18,7 @@
       "readline-sync": "^1.4.10"
    },
    "devDependencies": {
+      "nodemon": "^3.1.7",
       "prettier": "^3.3.3"
    }
 }
