@@ -180,60 +180,87 @@ const battle = async (stage, castle, isWin, locUnits) => {
             break;
          case '2':
             //조합
-            console.log(chalk.green(`\n1. ${mixStr[0]} 2. ${mixStr[1]} 3. ${mixStr[2]} 4.취소`) + chalk.blackBright(`\n(기본 -> 중급 80% | 중급 -> 상급 70%)`));
+            console.log(chalk.green(`\n1. ${mixStr[0]} 2. ${mixStr[1]} 3. ${mixStr[2]} 4. 취소`) + chalk.blackBright(`\n(기본 -> 중급 ${Settings.grade1Per}% | 중급 -> 상급 ${Settings.grade2Per}%)`));
             const choiceMix = readlineSync.question('당신의 선택은? ');
+
+            let isContinue = false;
+            let isSuccess = false;
 
             switch (choiceMix) {
                case '1':
                case '2':
                   let unitGrade1Cnt = 0;
                   let unitGrade2Cnt = 0;
-                  let unitGrade1Arr = [];
-                  let unitGrade2Arr = [];
+                  let unitGrade1Arr;
+                  let unitGrade2Arr;
 
-                  //3개 체크
-                  for (let i = 0; i < locUnits.length; i++) {
-                     if (locUnits[i][Number(choiceMix) - 1]) {
-                        //등급별 유닛 수 체크
-                        if (locUnits[i][Number(choiceMix) - 1]['grade'] === 1) {
-                           unitGrade1Cnt++;
-                           unitGrade1Arr.push(i);
-                        } else if (locUnits[i][Number(choiceMix) - 1]['grade'] === 2) {
-                           unitGrade2Cnt++;
-                           unitGrade2Arr.push(i);
+                  do {
+                     unitGrade1Cnt = 0;
+                     unitGrade2Cnt = 0;
+                     unitGrade1Arr = [];
+                     unitGrade2Arr = [];
+                     //3개 체크
+                     for (let i = 0; i < locUnits.length; i++) {
+                        if (locUnits[i][Number(choiceMix) - 1]) {
+                           //등급별 유닛 수 체크
+                           if (locUnits[i][Number(choiceMix) - 1]['grade'] === 1) {
+                              unitGrade1Cnt++;
+                              unitGrade1Arr.push(i);
+                           } else if (locUnits[i][Number(choiceMix) - 1]['grade'] === 2) {
+                              unitGrade2Cnt++;
+                              unitGrade2Arr.push(i);
+                           }
                         }
                      }
-                  }
 
-                  if (unitGrade1Cnt >= 3 || unitGrade2Cnt >= 3) {
-                     //확률
-                     //2등급 생성
-                     if (unitGrade1Cnt >= 3) {
-                        let mixCnt = unitGrade1Cnt === 6 ? 6 : 3;
-                        mixUnit(locUnits, mixCnt, unitGrade1Arr, Number(choiceMix), unitStr, 2);
+                     if (unitGrade1Cnt >= 3 || unitGrade2Cnt >= 3) {
+                        //소환
+                        //2등급 생성
+                        if (unitGrade1Cnt >= 3) {
+                           // 80%의 성공 확률
+                           if (Math.floor(Math.random() * 100) < Settings.grade1Per) {
+                              mixUnit(locUnits, unitGrade1Arr, Number(choiceMix), unitStr, 2);
+
+                              logsPush(logs, chalk.blue(`[조합 성공] 중급 ${unitStr[Number(choiceMix) - 1]} 유닛이 소환되었습니다.`));
+                              isSuccess = true;
+                           } else {
+                              locUnits[unitGrade1Arr.length - 1][Number(choiceMix) - 1] = false;
+                              logsPush(logs, chalk.red(`[조합 실패] ${unitStr[Number(choiceMix) - 1]} 유닛이 소모되었습니다.`));
+                              break;
+                           }
+                        }
+                        //3등급 생성
+                        if (unitGrade2Cnt >= 3) {
+                           if (Math.floor(Math.random() * 100) < Settings.grade2Per) {
+                              mixUnit(locUnits, unitGrade2Arr, Number(choiceMix), unitStr, 3);
+                              logsPush(logs, chalk.blue(`[조합 성공] 상급 ${unitStr[Number(choiceMix) - 1]} 유닛이 소환되었습니다.`));
+                              isSuccess = true;
+                           } else {
+                              locUnits[unitGrade2Arr.length - 1][Number(choiceMix) - 1] = false;
+                              logsPush(logs, chalk.red(`[조합 실패] ${unitStr[Number(choiceMix) - 1]} 유닛이 소모되었습니다.`));
+                              break;
+                           }
+                        }
+                     } else {
+                        //재료가 부족한 경우
+                        logsPush(logs, chalk.red(`조합 가능한 유닛이 없습니다.`));
+                        isContinue = true;
+                        break;
                      }
+                  } while (unitGrade1Cnt >= 3 || unitGrade2Cnt >= 3);
 
-                     //3등급 생성
-                     if (unitGrade2Cnt >= 3) {
-                        let mixCnt = unitGrade2Cnt == 6 ? 6 : 3;
-                        mixUnit(locUnits, mixCnt, unitGrade2Arr, Number(choiceMix), unitStr, 3);
-                     }
-
-                     logsPush(logs, chalk.green(`상위 [${unitStr[choiceMix - 1]}] 유닛을 소환하셨습니다.`));
+                  if (isContinue && !isSuccess) {
+                     continue;
+                  } else if (isContinue && isSuccess) {
                      break;
                   } else {
-                     //재료가 부족한 경우
-                     logsPush(logs, chalk.red(`조합 가능한 유닛이 없습니다.`));
-                     continue;
+                     break;
                   }
-
                case '3':
                   /***
                    * Case1 근접1,원거리2 Case2: 근접2,원거리1 Case3:원거리2,근접1
                    */
 
-                  let isContinue = false;
-                  let isSuccess = false;
                   let unitGrade1MCnt = 0; //1등급 밀리
                   let unitGrade1RCnt = 0; //1등급 원거리
                   let unitGrade2MCnt = 0; //2등급 밀리
@@ -527,16 +554,14 @@ const createUnit = (locUnits, idx, unitStr, grade) => {
 };
 
 //유닛 조합
-const mixUnit = (locUnits, mixCnt, unitGradeArr, choiceMix, unitStr, grade) => {
+const mixUnit = (locUnits, unitGradeArr, choiceMix, unitStr, grade) => {
    //하위 재료 삭제(자리 확보)
-   for (let i = 0; i < mixCnt; i++) {
+   for (let i = 0; i < Settings.useUnitCnt; i++) {
       locUnits[unitGradeArr[i]][choiceMix - 1] = false;
    }
 
    //상급 유닛 Create
-   for (let i = 0; i < mixCnt / 3; i++) {
-      createUnit(locUnits, choiceMix, unitStr, grade);
-   }
+   createUnit(locUnits, choiceMix, unitStr, grade);
 };
 
 const monsterSpawn = (logs, locMonsters, stage, wave) => {

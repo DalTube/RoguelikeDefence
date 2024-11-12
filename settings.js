@@ -14,8 +14,10 @@ export let difficulty = 0;
 /****
  * 조합 확률
  */
-export let grade1Per = 80;
-export let grade2Per = 70;
+export let grade1Per = 70;
+export let grade2Per = 60;
+
+export let useUnitCnt = 3;
 
 /**
  *
