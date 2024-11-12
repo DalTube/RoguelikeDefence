@@ -132,7 +132,6 @@ const battle = async (stage, castle, isWin) => {
       [false, false, false],
       [false, false, false],
    ];
-   let units = [];
 
    let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리']; //기본 선택지
    let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합']; //조합 선택지
@@ -166,7 +165,7 @@ const battle = async (stage, castle, isWin) => {
                case '1':
                case '2':
                case '3':
-                  let isCreate = createUnit(locUnits, Number(choiceUnit), unitStr);
+                  let isCreate = createUnit(locUnits, Number(choiceUnit), unitStr, 1);
                   if (isCreate) {
                      logsPush(logs, chalk.green(`[${choiseStr[choice - 1]}] ${unitStr[choiceUnit - 1]} 유닛을 소환하셨습니다.`));
                      break;
@@ -186,20 +185,232 @@ const battle = async (stage, castle, isWin) => {
 
             switch (choiceMix) {
                case '1':
-                  //근접 유닛 개수 체크(근거리 최소 3개)
-                  logsPush(logs, chalk.green(`[${mixStr[choiceMix - 1]}] 유닛을 소환하셨습니다.`));
-                  break;
                case '2':
-                  //원거리 유닛 개수 체크(원거리 최소 3개)
-                  logsPush(logs, chalk.green(`[${mixStr[choiceMix - 1]}] 유닛을 소환하셨습니다.`));
-                  break;
+                  let unitGrade1Cnt = 0;
+                  let unitGrade2Cnt = 0;
+                  let unitGrade1Arr = [];
+                  let unitGrade2Arr = [];
+
+                  //3개 체크
+                  for (let i = 0; i < locUnits.length; i++) {
+                     if (locUnits[i][Number(choiceMix) - 1]) {
+                        //등급별 유닛 수 체크
+                        if (locUnits[i][Number(choiceMix) - 1]['grade'] === 1) {
+                           unitGrade1Cnt++;
+                           unitGrade1Arr.push(i);
+                        } else if (locUnits[i][Number(choiceMix) - 1]['grade'] === 2) {
+                           unitGrade2Cnt++;
+                           unitGrade2Arr.push(i);
+                        }
+                     }
+                  }
+
+                  if (unitGrade1Cnt >= 3 || unitGrade2Cnt >= 3) {
+                     //확률
+
+                     //2등급 생성
+                     if (unitGrade1Cnt >= 3) {
+                        let mixCnt = unitGrade1Cnt === 6 ? 6 : 3;
+                        mixUnit(locUnits, mixCnt, unitGrade1Arr, Number(choiceMix), unitStr, 2);
+                     }
+
+                     //3등급 생성
+                     if (unitGrade2Cnt >= 3) {
+                        let mixCnt = unitGrade2Cnt == 6 ? 6 : 3;
+                        mixUnit(locUnits, mixCnt, unitGrade2Arr, Number(choiceMix), unitStr, 3);
+                     }
+
+                     logsPush(logs, chalk.green(`상위 [${unitStr[choiceMix - 1]}] 유닛을 소환하셨습니다.`));
+                     break;
+                  } else {
+                     //재료가 부족한 경우
+                     logsPush(logs, chalk.red(`조합 가능한 유닛이 없습니다.`));
+                     continue;
+                  }
+
                case '3':
-                  //근접 원거리 유닛 개수 체크 (합 3개이상)
-                  logsPush(logs, chalk.green(`[${mixStr[choiceMix - 1]}] 유닛을 소환하셨습니다.`));
-                  break;
-               case '4':
-                  continue;
+                  /***
+                   * Case1 근접1,원거리2 Case2: 근접2,원거리1 Case3:원거리2,근접1
+                   */
+
+                  let isContinue = false;
+                  let isSuccess = false;
+                  let unitGrade1MCnt = 0; //1등급 밀리
+                  let unitGrade1RCnt = 0; //1등급 원거리
+                  let unitGrade2MCnt = 0; //2등급 밀리
+                  let unitGrade2RCnt = 0; //2등급 원거리
+
+                  let unitGrade1MArr;
+                  let unitGrade1RArr;
+                  let unitGrade2MArr;
+                  let unitGrade2RArr;
+
+                  do {
+                     unitGrade1MCnt = 0; //1등급 밀리
+                     unitGrade1RCnt = 0; //1등급 원거리
+                     unitGrade2MCnt = 0; //2등급 밀리
+                     unitGrade2RCnt = 0; //2등급 원거리
+
+                     unitGrade1MArr = [];
+                     unitGrade1RArr = [];
+                     unitGrade2MArr = [];
+                     unitGrade2RArr = [];
+
+                     for (let i = 0; i < locUnits[0].length - 1; i++) {
+                        for (let j = 0; j < locUnits.length; j++) {
+                           if (locUnits[j][i]) {
+                              //등급별 유닛 수 체크
+                              if (locUnits[j][i]['grade'] === 1) {
+                                 if (i === 0) {
+                                    //근접
+                                    unitGrade1MCnt++;
+                                    unitGrade1MArr.push(j);
+                                 } else if (i === 1) {
+                                    //원거리
+                                    unitGrade1RCnt++;
+                                    unitGrade1RArr.push(j);
+                                 }
+                              } else if (locUnits[j][i]['grade'] === 2) {
+                                 if (i === 0) {
+                                    //근접
+                                    unitGrade2MCnt++;
+                                    unitGrade2MArr.push(j);
+                                 } else if (i === 1) {
+                                    //원거리
+                                    unitGrade2RCnt++;
+                                    unitGrade2RArr.push(j);
+                                 }
+                              }
+                           }
+                        }
+                     }
+
+                     if (
+                        (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) ||
+                        (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) ||
+                        (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) ||
+                        (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1)
+                     ) {
+                        //등급별 조합 가능 여부
+                        let isGrade1 = (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) || (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) ? true : false;
+                        let isGrade2 = (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) || (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1) ? true : false;
+
+                        if (isGrade1) {
+                           //성공, 실패 결과 유닛
+                           let unitType = Math.floor(Math.random() * 2) + 1; // 0,1
+
+                           // 80%의 성공 확률
+                           if (Math.floor(Math.random() * 100) < Settings.grade1Per) {
+                              if (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 2) {
+                                 for (let i = 0; i < 2; i++) {
+                                    unitType === 1 ? (locUnits[unitGrade1MArr[i]][unitType - 1] = false) : (locUnits[unitGrade1RArr[i]][unitType - 1] = false);
+                                 }
+
+                                 unitType === 1 ? (locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][1] = false) : (locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][0] = false);
+
+                                 createUnit(locUnits, unitType, unitStr, 2);
+                              } else {
+                                 if (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) {
+                                    //근접1 원거리2 소모
+                                    for (let i = 0; i < 2; i++) {
+                                       locUnits[unitGrade1RArr[i]][unitType - 1] = false;
+                                    }
+
+                                    locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][0] = false;
+
+                                    //상급 유닛 Create
+                                    createUnit(locUnits, unitType, unitStr, 2);
+                                 }
+
+                                 if (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) {
+                                    //근접2 원거리1 소모
+                                    for (let i = 0; i < 2; i++) {
+                                       locUnits[unitGrade1MArr[i]][unitType - 1] = false;
+                                    }
+
+                                    locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][1] = false;
+
+                                    //상급 유닛 Create
+                                    createUnit(locUnits, unitType, unitStr, 2);
+                                 }
+                              }
+                              logsPush(logs, chalk.blue(`[조합 성공] 중급 ${unitStr[unitType - 1]} 유닛이 소환되었습니다.`));
+                              isSuccess = true;
+                           } else {
+                              //실패
+                              unitType === 1
+                                 ? (locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][unitType - 1] = false)
+                                 : (locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][unitType - 1] = false);
+                              logsPush(logs, chalk.red(`[조합 실패] ${unitStr[unitType - 1]} 유닛이 소모되었습니다.`));
+                              break;
+                           }
+                        } else if (isGrade2) {
+                           //성공, 실패 결과 유닛
+                           let unitType = Math.floor(Math.random() * 2) + 1; // 0,1
+
+                           if (Math.floor(Math.random() * 100) < Settings.grade2Per) {
+                              //성공
+                              if (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 2) {
+                                 for (let i = 0; i < 2; i++) {
+                                    unitType === 1 ? (locUnits[unitGrade2MArr[i]][unitType - 1] = false) : (locUnits[unitGrade2RArr[i]][unitType - 1] = false);
+                                 }
+
+                                 unitType === 1 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][1] = false) : (locUnits[unitGrade2MArr[unitGrade2MArr.length - 1]][0] = false);
+
+                                 createUnit(locUnits, unitType, unitStr, 3);
+                              } else {
+                                 if (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) {
+                                    //근접1 원거리2 소모
+                                    for (let i = 0; i < 2; i++) {
+                                       locUnits[unitGrade2RArr[i]][unitType - 1] = false;
+                                    }
+
+                                    locUnits[unitGrade2MArr[unitGrade2MArr.length - 1]][0] = false;
+
+                                    //상급 유닛 Create
+                                    createUnit(locUnits, unitType, unitStr, 3);
+                                 }
+
+                                 if (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1) {
+                                    //근접2 원거리1 소모
+                                    for (let i = 0; i < 2; i++) {
+                                       locUnits[unitGrade2MArr[i]][unitType - 1] = false;
+                                    }
+
+                                    locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][1] = false;
+
+                                    //상급 유닛 Create
+                                    createUnit(locUnits, unitType, unitStr, 3);
+                                 }
+                              }
+                              logsPush(logs, chalk.blue(`[조합 성공] 상급 ${unitStr[unitType - 1]} 유닛이 소환되었습니다.`));
+                              isSuccess = true;
+                           } else {
+                              //실패
+                              unitType === 1
+                                 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false)
+                                 : (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false);
+                              logsPush(logs, chalk.red(`[조합 실패] 중급 ${unitStr[unitType - 1]} 유닛이 소모되었습니다.`));
+                              break;
+                           }
+                        }
+                     } else {
+                        logsPush(logs, chalk.red(`조합 가능한 유닛이 없습니다.`));
+                        isContinue = true;
+                        break;
+                     }
+                  } while ((unitGrade1MCnt > 0 && unitGrade1RCnt > 0) || (unitGrade2MCnt > 0 && unitGrade2RCnt > 0));
+
+                  if (isContinue && !isSuccess) {
+                     continue;
+                  } else if (isContinue && isSuccess) {
+                     break;
+                  } else {
+                     break;
+                  }
+
                default:
+                  logsPush(logs, chalk.red(`올바른 선택을 하세요.`));
                   continue;
             }
             break;
@@ -280,14 +491,44 @@ export async function startGame() {
 }
 
 //유닛 생성
-const createUnit = (locUnits, idx, unitStr) => {
+const createUnit = (locUnits, idx, unitStr, grade) => {
+   let gradeText = grade === 1 ? '' : grade === 2 ? '중급 ' : '상급';
+
    for (let i = 0; i < locUnits.length; i++) {
       if (!locUnits[i][Number(idx) - 1]) {
-         locUnits[i][Number(idx) - 1] = new Unit(unitStr[idx - 1] + (i + 1), idx - 1, 1, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
+         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
          return true;
       }
    }
    return false;
+};
+
+const randomMixUnit = (locUnits, unitCnt, unitGradeArrA, unitGradeArrB, unitType, unitStr, grade) => {
+   for (let i = 0; i < unitCnt * 2; i++) {
+      locUnits[unitGradeArrA[i]][unitType - 1] = false;
+   }
+
+   for (let i = 0; i < unitCnt; i++) {
+      locUnits[unitGradeArrB[i]][unitType - 1] = false;
+   }
+
+   //상급 유닛 Create
+   for (let i = 0; i < unitCnt; i++) {
+      createUnit(locUnits, unitType, unitStr, grade);
+   }
+};
+
+//유닛 조합
+const mixUnit = (locUnits, mixCnt, unitGradeArr, choiceMix, unitStr, grade) => {
+   //하위 재료 삭제(자리 확보)
+   for (let i = 0; i < mixCnt; i++) {
+      locUnits[unitGradeArr[i]][choiceMix - 1] = false;
+   }
+
+   //상급 유닛 Create
+   for (let i = 0; i < mixCnt / 3; i++) {
+      createUnit(locUnits, choiceMix, unitStr, grade);
+   }
 };
 
 const monsterSpawn = (logs, locMonsters, stage, wave) => {
@@ -307,21 +548,6 @@ const monsterSpawn = (logs, locMonsters, stage, wave) => {
    }
    logsPush(logs, chalk.white(`[Wave:${wave}] 몬스터 ${spawnCnt} 마리가 등장하였습니다.`));
 };
-
-//유닛 조합
-function mixUnit(idx) {
-   // 1.근거리 조합 2.원거리 조합 3.무작위 조합
-   switch (Number(idx)) {
-      case 1: //근거리
-         break;
-      case 2: //원거리
-         break;
-      case 3: //무작위
-         break;
-      default:
-         break;
-   }
-}
 
 //턴 종료
 const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
@@ -349,11 +575,9 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                   if (locMonsters[j][k - 1].hp <= 0) {
                      logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
-                     Settings.killCount++;
+
+                     //킬 카운트
                   }
-                  // else {
-                  // logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
-                  // }
 
                   isAttack = true;
                   break;
@@ -371,11 +595,10 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                         if (locMonsters[j][k - 1].hp <= 0) {
                            logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                            locMonsters[j][k - 1] = false;
-                           Settings.killCount++;
+
+                           //킬 카운트
                         }
-                        // else {
-                        // logsPush(logs, chalk.dim(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 ${locUnits[j][i].attack()} 데미지를 주었습니다.`));
-                        // }
+
                         isAttack = true;
                         break;
                      }

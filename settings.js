@@ -8,6 +8,16 @@ export let maxTurn = 5;
 //0: Easy 1: Nomal 2: Hard 3: Hell
 export let difficulty = 0;
 
+/****
+ * 조합 확률
+ */
+export let grade1Per = 80;
+export let grade2Per = 70;
+
+/**
+ *
+ */
+
 /***
  * 업적 관련
  */
