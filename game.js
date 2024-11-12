@@ -134,7 +134,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
    //    [false, false, false],
    // ];
 
-   let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리(20~100)']; //기본 선택지
+   let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', `수리(${castle.repairCnt}회)`]; //기본 선택지
    let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합(근접,원거리)']; //조합 선택지
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
    let itemStr = [Items.ITEM_CODE01_NAME, Items.ITEM_CODE02_NAME, Items.ITEM_CODE03_NAME];
@@ -447,10 +447,10 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
             //아이템
             console.log(chalk.green(`\n1. ${itemStr[0]} (${inventory[0].ea}개) 2. ${itemStr[1]} (${inventory[1].ea}개) 3. ${itemStr[2]} (${inventory[2].ea}개) 4. 취소`));
             const choiceItem = readlineSync.question('당신의 선택은? ');
-
+            let isSelectItem = false;
             switch (choiceItem) {
-               case '1':
-                  const isHave1 = checkItem(logs, inventory, Number(choiceItem));
+               case '1': //버프스톤
+                  const isHave1 = checkItem(logs, inventory, itemStr, Number(choiceItem));
                   if (!isHave1) continue;
 
                   //이미 적용중이면 pass
@@ -463,34 +463,36 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                   itemBuffTurn = 5;
                   logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 을 사용하였습니다.`));
                   inventory[Number(choiceItem) - 1].useItem();
+                  isSelectItem = true;
                   break;
-               case '2':
-                  const isHave2 = checkItem(logs, inventory, Number(choiceItem));
-                  if (!isHave2) continue;
 
+               case '2': //두루마리
+                  const isHave2 = checkItem(logs, inventory, itemStr, Number(choiceItem));
+                  if (!isHave2) continue;
                   logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 를 사용하였습니다.`));
                   for (let i = 0; i < locMonsters.length; i++) {
                      for (let j = 0; j < locMonsters[0].length; j++) {
-                        if (locMonsters[j][i]) {
+                        if (locMonsters[i][j]) {
                            let damage = Math.floor(Math.random() * 9 + 1);
-                           locMonsters[j][i].receveDamage(damage);
-                           logsPush(logs, chalk.white(`${locMonsters[j][i]['name']} 에게 ${damage} 데미지를 주었습니다.`));
+                           locMonsters[i][j].receveDamage(damage);
+                           logsPush(logs, chalk.white(`${locMonsters[i][j]['name']} 에게 ${damage} 데미지를 주었습니다.`));
                         }
                      }
                   }
-                  logsPush(logs, chalk.white(``));
                   inventory[Number(choiceItem) - 1].useItem();
+                  isSelectItem = true;
                   break;
-               case '3':
-                  const isHave3 = checkItem(logs, inventory, Number(choiceItem));
+
+               case '3': //원기옥
+                  const isHave3 = checkItem(logs, inventory, itemStr, Number(choiceItem));
                   if (!isHave3) continue;
 
                   let sumAttack = 0;
                   //소환된 유닛의 총 공격력 계산
                   for (let i = 0; i < locUnits.length; i++) {
                      for (let j = 0; j < locUnits[0].length; j++) {
-                        if (locUnits[j][i]) {
-                           sumAttack += locUnits[j][i].attack();
+                        if (locUnits[i][j]) {
+                           sumAttack += locUnits[i][j].attack();
                         }
                      }
                   }
@@ -499,32 +501,40 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                   //현재 몬스터 위치를 getMonstersLoc 담는다.
                   for (let i = 0; i < locMonsters.length; i++) {
                      for (let j = 0; j < locMonsters[0].length; j++) {
-                        if (locMonsters[j][i]) {
-                           getMonstersLoc.push([j, i]);
+                        if (locMonsters[i][j]) {
+                           getMonstersLoc.push([i, j]);
                         }
                      }
                   }
 
                   //getMonstersLoc legnth로 대상 몬스터 뽑기
                   let selectMonster = Math.floor(Math.random() * getMonstersLoc.length);
-
-                  locMonsters[getMonstersLoc[selectMonster[0]]][getMonstersLoc[selectMonster[1]]].receveDamage(sumAttack);
+                  locMonsters[getMonstersLoc[selectMonster][0]][getMonstersLoc[selectMonster][1]].receveDamage(sumAttack * 2);
                   logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 을 사용하였습니다.`));
-                  logsPush(logs, chalk.white(`${locMonsters[getMonstersLoc[selectMonster[0]]][getMonstersLoc[selectMonster[1]]]} 에게 ${sumAttack} 데미지를 주었습니다.`));
+                  logsPush(logs, chalk.white(`${locMonsters[getMonstersLoc[selectMonster][0]][getMonstersLoc[selectMonster][1]]['name']} 에게 ${sumAttack * 2} 데미지를 주었습니다.`));
 
                   inventory[Number(choiceItem) - 1].useItem();
+                  isSelectItem = true;
                   break;
+
                case '4':
                   continue;
+
                default:
                   logsPush(logs, chalk.red(`올바른 선택을 하세요.`));
                   continue;
             }
-
+            if (isSelectItem) break;
+            else continue;
          case '4':
             //수리
             if (castle.hp === Settings.maxCastleHp) {
                logsPush(logs, chalk.red(`성의 체력이 이미 가득 차 있습니다.`));
+               continue;
+            }
+
+            if (castle.repairCnt === 0) {
+               logsPush(logs, chalk.red(`도구가 고갈되어 더 이상 수리할 수 없습니다.`));
                continue;
             }
 
@@ -533,15 +543,18 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                castle.hp = Settings.maxCastleHp;
                logsPush(logs, chalk.white(`5%의 기적! 성의 체력이 최대치로 회복했습니다.`));
             } else {
-               const baseN = 100;
-               let res = Math.floor(Math.random() * baseN + 20);
+               const maxRepairHp = 100;
+               let repairHp = Math.floor(Math.random() * maxRepairHp + 20);
 
-               if (res >= baseN) {
-                  res = baseN;
+               if (repairHp >= maxRepairHp) {
+                  repairHp = maxRepairHp;
                }
-               let beforeHp = castle.hp;
-               castle.hp = castle.hp + res > Settings.maxCastleHp ? Settings.maxCastleHp : castle.hp + res;
-               logsPush(logs, chalk.white(`성의 체력이 ${castle.hp - beforeHp} 회복했습니다.`));
+
+               if (castle.hp + repairHp > Settings.maxCastleHp) repairHp = Settings.maxCastleHp - castle.hp;
+
+               castle.repair(repairHp);
+
+               logsPush(logs, chalk.white(`성의 체력이 ${repairHp} 회복했습니다.`));
             }
             break;
          case '0':
@@ -568,7 +581,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
             turn--;
          }
 
-         await turnEndAction(logs, locUnits, locMonsters, castle);
+         await turnEndAction(logs, locUnits, locMonsters, castle, inventory);
       } else if (wave === Settings.maxWave) {
          if (monsters.length === 0) {
             isStageClear = true;
@@ -595,7 +608,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
 export async function startGame() {
    console.clear();
 
-   const castle = new Castle(1000, 0);
+   const castle = new Castle(1000, 0, 3);
    const inventory = createInventory();
 
    let stage = 1;
@@ -674,7 +687,7 @@ const monsterSpawn = (logs, locMonsters, stage, wave) => {
 };
 
 //턴 종료
-const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
+const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory) => {
    /***
     * 아군 행동
     *
@@ -701,6 +714,7 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                      logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 를 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
 
+                     getItemRate(logs, inventory); //아이템 획득 여부?
                      //킬 카운트
                   } else {
                      logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
@@ -723,6 +737,8 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                         if (locMonsters[n][k - 1].hp <= 0) {
                            logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 를 처치하였습니다.`));
                            locMonsters[n][k - 1] = false;
+
+                           getItemRate(logs, inventory); //아이템 획득 여부?
 
                            //킬 카운트
                         } else {
@@ -773,8 +789,8 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
    if (sumDamage > 0) logsPush(logs, chalk.white(`몬스터의 공격으로 성의 체력이 ${sumDamage} 감소 했습니다.`));
 };
 
-function checkItem(logs, inventory, idx) {
-   const isHave = true;
+function checkItem(logs, inventory, itemStr, idx) {
+   let isHave = true;
    if (inventory[idx - 1]['ea'] === 0) {
       logsPush(logs, chalk.red(`${itemStr[idx - 1]} 이 없습니다.`));
       isHave = false;
@@ -810,4 +826,15 @@ const createInventory = () => {
    inventory.push(new Item(Items.ITEM_CODE02_CODE, Items.ITEM_CODE02_NAME, Items.ITEM_CODE02_DESC, 0));
    inventory.push(new Item(Items.ITEM_CODE03_CODE, Items.ITEM_CODE03_NAME, Items.ITEM_CODE03_DESC, 0));
    return inventory;
+};
+
+const getItemRate = (logs, inventory) => {
+   //개별로 확률이 존재. 하지만
+   const itemsRates = [Items.ITEM_CODE01_RATE, Items.ITEM_CODE02_RATE, Items.ITEM_CODE03_RATE];
+
+   for (let i = 0; i < itemsRates.length; i++) {
+      if (Math.floor(Math.random() * 100 + 1) / 100 <= itemsRates[i]) {
+         logsPush(logs, chalk.blue(inventory[i].getItem()));
+      }
+   }
 };

@@ -1,10 +1,11 @@
 export class Item {
    //아이템
-   constructor(id, name, desc, ea) {
+   constructor(id, name, desc, ea, rate) {
       this._id = id;
       this._name = name;
       this._desc = desc;
-      this.ea = ea;
+      this._ea = ea;
+      this._rate = rate;
    }
 
    get id() {
