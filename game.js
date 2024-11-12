@@ -107,7 +107,7 @@ function displayMap(locUnits, locMonsters) {
    console.log(line);
 }
 
-const battle = async (stage, castle, isWin) => {
+const battle = async (stage, castle, isWin, locUnits) => {
    let logs = [];
    let wave = 1;
    let turn = 5;
@@ -124,16 +124,16 @@ const battle = async (stage, castle, isWin) => {
    ];
    // let locUnits = [6][2]; //줄/열
    // 근접,원거리, 버퍼
-   let locUnits = [
-      [false, false, false],
-      [false, false, false],
-      [false, false, false],
-      [false, false, false],
-      [false, false, false],
-      [false, false, false],
-   ];
+   // let locUnits = [
+   //    [false, false, false],
+   //    [false, false, false],
+   //    [false, false, false],
+   //    [false, false, false],
+   //    [false, false, false],
+   //    [false, false, false],
+   // ];
 
-   let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리']; //기본 선택지
+   let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리(20~100)']; //기본 선택지
    let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합']; //조합 선택지
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
 
@@ -158,7 +158,7 @@ const battle = async (stage, castle, isWin) => {
       switch (choice) {
          case '1':
             //소환
-            console.log(chalk.green(`\n1. 근접 유닛 2. 원거리 유닛 3. 버퍼 4.취소`));
+            console.log(chalk.green(`\n1. 근접 유닛 2. 원거리 유닛 3. 버퍼 4. 취소`));
             const choiceUnit = readlineSync.question('당신의 선택은? ');
 
             switch (choiceUnit) {
@@ -233,7 +233,6 @@ const battle = async (stage, castle, isWin) => {
                         if (unitGrade2Cnt >= 3) {
                            if (Math.floor(Math.random() * 100) < Settings.grade2Per) {
                               mixUnit(locUnits, unitGrade2Arr, Number(choiceMix), unitStr, 3);
-
                               logsPush(logs, chalk.blue(`[조합 성공] 상급 ${unitStr[Number(choiceMix) - 1]} 유닛이 소환되었습니다.`));
                               isSuccess = true;
                            } else {
@@ -448,7 +447,22 @@ const battle = async (stage, castle, isWin) => {
             useItem(choiceItem);
             break;
          case '4':
-            //아이템
+            //수리
+            if (Math.floor(Math.random() * 100 + 1) <= 5) {
+               //풀피 회복
+               castle.hp = Settings.maxCastleHp;
+               logsPush(logs, chalk.white(`5%의 기적! 성의 체력이 최대치로 회복했습니다.`));
+            } else {
+               const baseN = 100;
+               let res = Math.floor(Math.random() * baseN + 20);
+
+               if (res >= baseN) {
+                  res = baseN;
+               }
+               let beforeHp = castle.hp;
+               castle.hp = castle.hp + res > Settings.maxCastleHp ? Settings.maxCastleHp : castle.hp + res;
+               logsPush(logs, chalk.white(`성의 체력이 ${castle.hp - beforeHp} 회복했습니다.`));
+            }
             break;
          case '0':
             process.exit(0);
@@ -496,8 +510,17 @@ export async function startGame() {
    let stage = 1;
    let isWin = false;
 
+   let locUnits = [
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+      [false, false, false],
+   ];
+
    while (stage <= Settings.maxStage) {
-      isWin = await battle(stage, castle, isWin);
+      isWin = await battle(stage, castle, isWin, locUnits);
       // 스테이지 클리어 및 게임 종료 조건
 
       //최종스테이지고 isWin = true면 클리어 아니면 패배
@@ -530,21 +553,6 @@ const createUnit = (locUnits, idx, unitStr, grade) => {
    return false;
 };
 
-const randomMixUnit = (locUnits, unitCnt, unitGradeArrA, unitGradeArrB, unitType, unitStr, grade) => {
-   for (let i = 0; i < unitCnt * 2; i++) {
-      locUnits[unitGradeArrA[i]][unitType - 1] = false;
-   }
-
-   for (let i = 0; i < unitCnt; i++) {
-      locUnits[unitGradeArrB[i]][unitType - 1] = false;
-   }
-
-   //상급 유닛 Create
-   for (let i = 0; i < unitCnt; i++) {
-      createUnit(locUnits, unitType, unitStr, grade);
-   }
-};
-
 //유닛 조합
 const mixUnit = (locUnits, unitGradeArr, choiceMix, unitStr, grade) => {
    //하위 재료 삭제(자리 확보)
@@ -569,9 +577,9 @@ const monsterSpawn = (logs, locMonsters, stage, wave) => {
 
    //소환
    for (let i = 0; i < locRandom.length; i++) {
-      if (!locMonsters[locRandom[i] - 1][6]) locMonsters[locRandom[i] - 1][6] = new Monster('몹', 0, 'F', 10, 5, 10);
+      if (!locMonsters[locRandom[i] - 1][6]) locMonsters[locRandom[i] - 1][6] = new Monster('몹', 0, 'F', 10, 20, 10);
    }
-   logsPush(logs, chalk.white(`[Wave:${wave}] 몬스터 ${spawnCnt} 마리가 등장하였습니다.`));
+   logsPush(logs, chalk.whiteBright(`[Wave:${wave}] 몬스터 ${spawnCnt} 마리가 등장하였습니다.`));
 };
 
 //턴 종료
@@ -598,7 +606,7 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                   locMonsters[j][k - 1].hp -= locUnits[j][i].attack();
                   //처치 시 삭제
                   if (locMonsters[j][k - 1].hp <= 0) {
-                     logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
+                     logsPush(logs, chalk.white(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
 
                      //킬 카운트
@@ -618,7 +626,7 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
                         locMonsters[n][k - 1].hp -= locUnits[j][i].attack();
                         //처치 시 삭제
                         if (locMonsters[j][k - 1].hp <= 0) {
-                           logsPush(logs, chalk.dim(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
+                           logsPush(logs, chalk.white(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
                            locMonsters[j][k - 1] = false;
 
                            //킬 카운트
@@ -665,7 +673,7 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
       }
    }
 
-   if (sumDamage > 0) logsPush(logs, chalk.dim(`성의 체력이 -${sumDamage} 잃었습니다.`));
+   if (sumDamage > 0) logsPush(logs, chalk.white(`몬스터의 공격으로 성의 체력이 ${sumDamage} 감소 했습니다.`));
 };
 
 function checkItem(idx) {

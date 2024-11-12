@@ -1,3 +1,6 @@
+//성 체력
+export let maxCastleHp = 1000;
+
 /***
  * 스테이즈 설정
  */
