@@ -1,12 +1,14 @@
 export class Unit {
    //유닛
-   constructor(name, type, grade, damage, critical) {
+   constructor(name, type, grade, damage, critical, isItemBuff, isUnitBuff) {
       this._name = name;
       this._type = type;
       this._grade = grade;
       this._damage = damage;
       this._critical = critical;
       this._maxGrade = 3;
+      this._isItemBuff = isItemBuff;
+      this._isUnitBuff = isUnitBuff;
    }
 
    get name() {
@@ -49,6 +51,22 @@ export class Unit {
       this._critical = value;
    }
 
+   get isItemBuff() {
+      return this._isItemBuff;
+   }
+
+   set isItemBuff(value) {
+      this._isItemBuff = value;
+   }
+
+   get isUnitBuff() {
+      return this._isUnitBuff;
+   }
+
+   set isUnitBuff(value) {
+      this._isUnitBuff = value;
+   }
+
    attack() {
       // 유닛의 공격
       return this._damage;
@@ -63,5 +81,13 @@ export class Unit {
       }
 
       return range;
+   }
+
+   itemBuff() {
+      this._isItemBuff ? (this._damage += 3) : (this._damage -= 3);
+   }
+
+   unitBuff() {
+      this._isUnitBuff ? (this._damage += 3) : (this._damage -= 3);
    }
 }

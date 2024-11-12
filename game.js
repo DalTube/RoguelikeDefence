@@ -3,18 +3,19 @@ import readlineSync from 'readline-sync';
 import { Castle } from './models/castle.js';
 import { Monster } from './models/monster.js';
 import { Unit } from './models/unit.js';
+import { Item } from './models/item.js';
 import * as Items from './constants/items.js';
 import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
 
-function displayStatus(stage, wave, turn, castle, locMonsters) {
+function displayStatus(stage, wave, turn, castle, locUnits, locMonsters) {
    const line = chalk.magentaBright('='.repeat(71));
    let imogi = '🗡️';
    let imogi2 = ' ';
    console.log(chalk.magentaBright(`\n=== Current Status ===`));
    console.log(chalk.cyanBright(`| Stage: ${stage} Wave: ${wave} Next Wave: ${turn} 턴`));
    console.log(chalk.blueBright(`| 성 내구도 ${castle.hp}`));
-   console.log(chalk.blueBright(`| 유닛 정보 종류 등급 개수 공격력 `));
+   console.log(chalk.blueBright(`| 유닛 정보 종류 등급 개수 공격력 ${locUnits[0][0]['name']} ${locUnits[0][0]['damage']} ${locUnits[0][0]['isItemBuff']} ${locUnits[0][0]['isUnitBuff']}`));
    if (locMonsters.length > 0) {
       console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 ${locMonsters[0][0]['name']} ${locMonsters[0][0]['hp']} ${locMonsters[0][0]['damage']}|`));
    } else {
@@ -107,7 +108,7 @@ function displayMap(locUnits, locMonsters) {
    console.log(line);
 }
 
-const battle = async (stage, castle, isWin, locUnits) => {
+const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) => {
    let logs = [];
    let wave = 1;
    let turn = 5;
@@ -134,8 +135,9 @@ const battle = async (stage, castle, isWin, locUnits) => {
    // ];
 
    let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리(20~100)']; //기본 선택지
-   let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합']; //조합 선택지
+   let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합(근접,원거리)']; //조합 선택지
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
+   let itemStr = [Items.ITEM_CODE01_NAME, Items.ITEM_CODE02_NAME, Items.ITEM_CODE03_NAME];
 
    //Stage 시작 시 몬스터 소환
    monsterSpawn(logs, locMonsters, stage, wave);
@@ -144,7 +146,7 @@ const battle = async (stage, castle, isWin, locUnits) => {
       console.clear();
 
       //상단 Display출력
-      displayStatus(stage, wave, turn, castle, monsters);
+      displayStatus(stage, wave, turn, castle, locUnits, monsters);
       displayMap(locUnits, locMonsters);
 
       //Logs 출력
@@ -434,7 +436,8 @@ const battle = async (stage, castle, isWin, locUnits) => {
                   } else {
                      break;
                   }
-
+               case '4':
+                  continue;
                default:
                   logsPush(logs, chalk.red(`올바른 선택을 하세요.`));
                   continue;
@@ -442,12 +445,89 @@ const battle = async (stage, castle, isWin, locUnits) => {
             break;
          case '3':
             //아이템
-            console.log(chalk.green(`\n1. ${Items.ITEM_CODE01_NAME} 2. ${Items.ITEM_CODE02_NAME} 3. ${Items.ITEM_CODE03_NAME} 4. 취소`));
+            console.log(chalk.green(`\n1. ${itemStr[0]} (${inventory[0].ea}개) 2. ${itemStr[1]} (${inventory[1].ea}개) 3. ${itemStr[2]} (${inventory[2].ea}개) 4. 취소`));
             const choiceItem = readlineSync.question('당신의 선택은? ');
-            useItem(choiceItem);
-            break;
+
+            switch (choiceItem) {
+               case '1':
+                  const isHave1 = checkItem(logs, inventory, Number(choiceItem));
+                  if (!isHave1) continue;
+
+                  //이미 적용중이면 pass
+                  if (itemBuffTurn > 0) {
+                     logsPush(logs, chalk.red(`${itemStr[0]} 의 효과가 남아있어 사용할 수 없습니다. (남은 턴: ${itemBuffTurn})`));
+                     continue;
+                  }
+
+                  buffItemControl(locUnits, true);
+                  itemBuffTurn = 5;
+                  logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 을 사용하였습니다.`));
+                  inventory[Number(choiceItem) - 1].useItem();
+                  break;
+               case '2':
+                  const isHave2 = checkItem(logs, inventory, Number(choiceItem));
+                  if (!isHave2) continue;
+
+                  logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 를 사용하였습니다.`));
+                  for (let i = 0; i < locMonsters.length; i++) {
+                     for (let j = 0; j < locMonsters[0].length; j++) {
+                        if (locMonsters[j][i]) {
+                           let damage = Math.floor(Math.random() * 9 + 1);
+                           locMonsters[j][i].receveDamage(damage);
+                           logsPush(logs, chalk.white(`${locMonsters[j][i]['name']} 에게 ${damage} 데미지를 주었습니다.`));
+                        }
+                     }
+                  }
+                  logsPush(logs, chalk.white(``));
+                  inventory[Number(choiceItem) - 1].useItem();
+                  break;
+               case '3':
+                  const isHave3 = checkItem(logs, inventory, Number(choiceItem));
+                  if (!isHave3) continue;
+
+                  let sumAttack = 0;
+                  //소환된 유닛의 총 공격력 계산
+                  for (let i = 0; i < locUnits.length; i++) {
+                     for (let j = 0; j < locUnits[0].length; j++) {
+                        if (locUnits[j][i]) {
+                           sumAttack += locUnits[j][i].attack();
+                        }
+                     }
+                  }
+
+                  let getMonstersLoc = [];
+                  //현재 몬스터 위치를 getMonstersLoc 담는다.
+                  for (let i = 0; i < locMonsters.length; i++) {
+                     for (let j = 0; j < locMonsters[0].length; j++) {
+                        if (locMonsters[j][i]) {
+                           getMonstersLoc.push([j, i]);
+                        }
+                     }
+                  }
+
+                  //getMonstersLoc legnth로 대상 몬스터 뽑기
+                  let selectMonster = Math.floor(Math.random() * getMonstersLoc.length);
+
+                  locMonsters[getMonstersLoc[selectMonster[0]]][getMonstersLoc[selectMonster[1]]].receveDamage(sumAttack);
+                  logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 을 사용하였습니다.`));
+                  logsPush(logs, chalk.white(`${locMonsters[getMonstersLoc[selectMonster[0]]][getMonstersLoc[selectMonster[1]]]} 에게 ${sumAttack} 데미지를 주었습니다.`));
+
+                  inventory[Number(choiceItem) - 1].useItem();
+                  break;
+               case '4':
+                  continue;
+               default:
+                  logsPush(logs, chalk.red(`올바른 선택을 하세요.`));
+                  continue;
+            }
+
          case '4':
             //수리
+            if (castle.hp === Settings.maxCastleHp) {
+               logsPush(logs, chalk.red(`성의 체력이 이미 가득 차 있습니다.`));
+               continue;
+            }
+
             if (Math.floor(Math.random() * 100 + 1) <= 5) {
                //풀피 회복
                castle.hp = Settings.maxCastleHp;
@@ -498,6 +578,15 @@ const battle = async (stage, castle, isWin, locUnits) => {
             }
          }
       }
+
+      //버프 아이템 턴 소모처리
+      if (itemBuffTurn > 0) {
+         if (itemBuffTurn - 1 === 0) {
+            logsPush(logs, chalk.white(`${itemStr[0]}의 효과가 사라졌습니다.`));
+            buffItemControl(locUnits, false);
+         }
+         itemBuffTurn--;
+      }
    }
 
    return isWin;
@@ -507,9 +596,11 @@ export async function startGame() {
    console.clear();
 
    const castle = new Castle(1000, 0);
+   const inventory = createInventory();
+
    let stage = 1;
    let isWin = false;
-
+   let itemBuffTurn = 0;
    let locUnits = [
       [false, false, false],
       [false, false, false],
@@ -520,7 +611,7 @@ export async function startGame() {
    ];
 
    while (stage <= Settings.maxStage) {
-      isWin = await battle(stage, castle, isWin, locUnits);
+      isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn);
       // 스테이지 클리어 및 게임 종료 조건
 
       //최종스테이지고 isWin = true면 클리어 아니면 패배
@@ -541,12 +632,12 @@ export async function startGame() {
 }
 
 //유닛 생성
-const createUnit = (locUnits, idx, unitStr, grade) => {
-   let gradeText = grade === 1 ? '' : grade === 2 ? '중급 ' : '상급';
+const createUnit = (locUnits, idx, unitStr, grade, isUnitBuff) => {
+   let gradeText = grade === 1 ? '' : grade === 2 ? '중급 ' : '상급 ';
 
    for (let i = 0; i < locUnits.length; i++) {
       if (!locUnits[i][Number(idx) - 1]) {
-         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
+         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10, false, isUnitBuff);
          return true;
       }
    }
@@ -604,12 +695,15 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
             for (let k = range; k > 0; k--) {
                if (locMonsters[j][k - 1]) {
                   locMonsters[j][k - 1].hp -= locUnits[j][i].attack();
+
                   //처치 시 삭제
                   if (locMonsters[j][k - 1].hp <= 0) {
-                     logsPush(logs, chalk.white(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
+                     logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 를 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
 
                      //킬 카운트
+                  } else {
+                     logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
                   }
 
                   isAttack = true;
@@ -620,16 +714,19 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
             //내 앞줄에 몹이 없는 것 확인
             if (!isAttack) {
                for (let k = range; k > 0; k--) {
-                  //대상 찾기(고도화)
+                  //대상 찾기(고도화)x
                   for (let n = 0; n < locMonsters.length; n++) {
                      if (locMonsters[n][k - 1]) {
                         locMonsters[n][k - 1].hp -= locUnits[j][i].attack();
+
                         //처치 시 삭제
-                        if (locMonsters[j][k - 1].hp <= 0) {
-                           logsPush(logs, chalk.white(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
-                           locMonsters[j][k - 1] = false;
+                        if (locMonsters[n][k - 1].hp <= 0) {
+                           logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 를 처치하였습니다.`));
+                           locMonsters[n][k - 1] = false;
 
                            //킬 카운트
+                        } else {
+                           logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
                         }
 
                         isAttack = true;
@@ -676,25 +773,24 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
    if (sumDamage > 0) logsPush(logs, chalk.white(`몬스터의 공격으로 성의 체력이 ${sumDamage} 감소 했습니다.`));
 };
 
-function checkItem(idx) {
-   //해당 아이템이 있는지 체크
-   //있으면 사용
-   //없으면
+function checkItem(logs, inventory, idx) {
+   const isHave = true;
+   if (inventory[idx - 1]['ea'] === 0) {
+      logsPush(logs, chalk.red(`${itemStr[idx - 1]} 이 없습니다.`));
+      isHave = false;
+   }
+   return isHave;
 }
 
-const checkAchievement = () => {
-   /***
-    * 몹 처치수 업적
-    */
-   Settings.killCount;
-
-   /***
-    * 난이도 업적
-    */
-
-   /***
-    * 조합 업적
-    */
+const buffItemControl = (locUnits, isBuff) => {
+   for (let i = 0; i < locUnits.length; i++) {
+      for (let j = 0; j < locUnits[0].length; j++) {
+         if (locUnits[j][i]) {
+            locUnits[j][i]['isItemBuff'] = isBuff;
+            locUnits[j][i].itemBuff();
+         }
+      }
+   }
 };
 
 function endGame(isWin) {
@@ -707,3 +803,11 @@ function endGame(isWin) {
       //초기 화면 이동
    }
 }
+
+const createInventory = () => {
+   const inventory = [];
+   inventory.push(new Item(Items.ITEM_CODE01_CODE, Items.ITEM_CODE01_NAME, Items.ITEM_CODE01_DESC, 0));
+   inventory.push(new Item(Items.ITEM_CODE02_CODE, Items.ITEM_CODE02_NAME, Items.ITEM_CODE02_DESC, 0));
+   inventory.push(new Item(Items.ITEM_CODE03_CODE, Items.ITEM_CODE03_NAME, Items.ITEM_CODE03_DESC, 0));
+   return inventory;
+};
