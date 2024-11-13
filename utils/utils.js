@@ -12,7 +12,7 @@ export function logsPush(logs, row) {
    //    }
    // }
 
-   const maxRow = 3;
+   const maxRow = 10;
    if (logs.length >= maxRow) logs.shift();
    logs.push(row);
 }
