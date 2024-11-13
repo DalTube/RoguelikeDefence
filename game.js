@@ -244,7 +244,7 @@ function displayStatus(stage, wave, turn, castle, unitStr, locUnits, displayMons
          `│` +
          `│` +
          ' '.repeat(4) +
-         `${displayMonsters[10] ? 'I' : ' '}` +
+         `${displayMonsters[10] ? 'K' : ' '}` +
          ' '.repeat(2) +
          `${displayMonsters[10] ? (displayMonsters[10]['name'].toString().length === 1 ? '  ' + displayMonsters[10]['name'] + '  ' : displayMonsters[10]['name'].toString().length === 2 ? '  ' + displayMonsters[10]['name'] : displayMonsters[10]['name']) : '      '}` +
          ' '.repeat(3) +
@@ -252,7 +252,7 @@ function displayStatus(stage, wave, turn, castle, unitStr, locUnits, displayMons
          ' '.repeat(3) +
          `${displayMonsters[10] ? (displayMonsters[10]['damage'].toString().length === 1 ? '  ' + displayMonsters[10]['damage'] : displayMonsters[10]['damage'].toString().length === 2 ? ' ' + displayMonsters[10]['damage'] : displayMonsters[10]['damage']) : '   '}` +
          ' '.repeat(9) +
-         `${displayMonsters[11] ? 'J' : ' '}` +
+         `${displayMonsters[11] ? 'L' : ' '}` +
          ' '.repeat(2) +
          `${displayMonsters[11] ? (displayMonsters[11]['name'].toString().length === 1 ? '  ' + displayMonsters[11]['name'] + '  ' : displayMonsters[11]['name'].toString().length === 2 ? '  ' + displayMonsters[11]['name'] : displayMonsters[11]['name']) : '      '}` +
          ' '.repeat(3) +
@@ -323,32 +323,72 @@ function displayMap(locUnits, locMonsters) {
    // console.log(`<|\\|`);
    // console.log(`/ \\|)`);
 
-   console.log(``);
-   console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(' '.repeat(11) + `${locUnits[0][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[0][0] ? '┃ O__' : '     '}`);
+   // console.log(' '.repeat(11) + `${locUnits[0][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[0][0] ? '╋/|)_)' : '      '}`);
+   // console.log(' '.repeat(11) + `${locUnits[0][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[0][0] ? ' / \\' : '    '}`);
+   // // console.log(``);
+   // console.log(' '.repeat(9) + `${locUnits[1][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[1][0] ? '┃ O__' : '     '}`);
+   // console.log(' '.repeat(9) + `${locUnits[1][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[1][0] ? '╋/|)_)' : '      '}`);
+   // console.log(' '.repeat(9) + `${locUnits[1][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[1][0] ? ' / \\' : '    '}`);
+   // // console.log(``);
+   // console.log(' '.repeat(7) + `${locUnits[2][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[2][0] ? '┃ O__' : '     '}`);
+   // console.log(' '.repeat(7) + `${locUnits[2][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[2][0] ? '╋/|)_)' : '      '}`);
+   // console.log(`${locUnits[0][2] ? ' O / ' : '     '}` + ' '.repeat(2) + `${locUnits[2][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[2][0] ? ' / \\' : '    '}`);
+   // console.log(`${locUnits[0][2] ? '<|\\| ' : '     '}`);
+   // console.log(`${locUnits[0][2] ? '/ \\| ' : '     '}` + ' '.repeat(0) + `${locUnits[3][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[3][0] ? '┃ O__' : '     '}`);
+   // console.log(' '.repeat(5) + `${locUnits[3][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[3][0] ? '╋/|)_)' : '      '}`);
+   // console.log(' '.repeat(5) + `${locUnits[3][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[3][0] ? ' / \\' : '    '}`);
+   // // console.log(``);
+   // console.log(' '.repeat(3) + `${locUnits[4][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[4][0] ? '┃ O__' : '     '}`);
+   // console.log(' '.repeat(3) + `${locUnits[4][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[4][0] ? '╋/|)_)' : '      '}`);
+   // console.log(' '.repeat(3) + `${locUnits[4][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[4][0] ? ' / \\' : '    '}`);
+   // // console.log(``);
+   // console.log(' '.repeat(1) + `${locUnits[5][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[5][0] ? '┃ O__' : '     '}`);
+   // console.log(' '.repeat(1) + `${locUnits[5][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[5][0] ? '╋/|)_)' : '      '}`);
+   // console.log(' '.repeat(1) + `${locUnits[5][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[5][0] ? ' / \\' : '    '}`);
+   // // console.log(``);
+   console.log(' '.repeat(6) + '                    _____');
+   console.log(' '.repeat(6) + '                   <_____|');
+   console.log(' '.repeat(6) + '                         |');
+   console.log(' '.repeat(6) + '  ___                   .|');
+   console.log(' '.repeat(6) + " <___|                .'/``.");
+   console.log(' '.repeat(6) + "  _  |  _   _       .' / :\\ `");
+   console.log(' '.repeat(6) + "_|;|_|_|;|_|;|__  .'  /  : .'|");
+   console.log(' '.repeat(6) + "     |           --------''.'|");
+   console.log(' '.repeat(6) + "   / ^\\         | |###| |.'  |");
+   console.log(' '.repeat(6) + '                             |');
+   console.log(' '.repeat(17) + `${locUnits[0][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[0][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/|');
+   console.log(' '.repeat(17) + `${locUnits[0][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[0][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(1) + '|');
+   console.log(' '.repeat(17) + `${locUnits[0][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[0][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(2) + '|');
    // console.log(``);
-   console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(14) + `${locUnits[1][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[1][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(3) + '|');
+   console.log(' '.repeat(14) + `${locUnits[1][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[1][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(4) + '|');
+   console.log(' '.repeat(14) + `${locUnits[1][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[1][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(5) + '|');
    // console.log(``);
-   console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   console.log(` O / ` + ' '.repeat(2) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
-   console.log(`<|\\| `);
-   console.log(`/ \\| ` + ' '.repeat(0) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(11) + `${locUnits[2][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[2][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(6) + '|');
+   console.log(' '.repeat(11) + `${locUnits[2][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[2][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(7) + '|');
+   console.log(' '.repeat(1) + `${locUnits[0][2] ? ' O / ' : '     '}` + ' '.repeat(5) + `${locUnits[2][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[2][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(8) + '|' + ' '.repeat(4) + 'ㅡ'.repeat(39));
+   console.log(' '.repeat(1) + `${locUnits[0][2] ? '<|\\| ' : '     '}` + ' '.repeat(20) + '/' + ' '.repeat(9) + '|');
+   console.log(' '.repeat(1) + `${locUnits[0][2] ? '/ \\| ' : '     '}` + ' '.repeat(1) + `${locUnits[3][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[3][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(4) + 'ㅡ\\' + ' '.repeat(3) + '|');
+   console.log(' '.repeat(7) + `${locUnits[3][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[3][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(4) + '/+++|' + ' '.repeat(2) + '|');
+   console.log(' '.repeat(7) + `${locUnits[3][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[3][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(3) + '/+++++|');
    // console.log(``);
-   console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(4) + `${locUnits[4][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[4][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(4) + '/+++++|');
+   console.log(' '.repeat(4) + `${locUnits[4][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[4][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(3) + '/+++++++|');
+   console.log(' '.repeat(4) + `${locUnits[4][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[4][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(4) + '/+++++++');
    // console.log(``);
-   console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(1) + `${locUnits[5][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[5][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(3) + '/++++++++');
+   console.log(' '.repeat(1) + `${locUnits[5][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[5][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(4) + '/+++++++');
+   console.log(' '.repeat(1) + `${locUnits[5][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[5][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(3) + '/++++++++');
+   console.log(' '.repeat(16) + '/' + ' '.repeat(4) + '/+++++++');
+   console.log(' ' + 'ㅡ'.repeat(7) + '/' + ' '.repeat(4) + '|+++++++');
+   console.log(' '.repeat(15) + '|' + ' '.repeat(4) + '|++++++');
+   console.log(' '.repeat(4) + '|###|' + ' '.repeat(6) + '|' + ' '.repeat(4) + '|+++++');
+   console.log(' '.repeat(4) + '|###|' + ' '.repeat(6) + '|' + ' '.repeat(4) + '|++++');
+   console.log(' '.repeat(4) + '=====' + ' '.repeat(6) + '|' + ' '.repeat(4) + '|+++');
+   console.log(' '.repeat(15) + '|' + ' '.repeat(4) + '|++');
+   console.log(' '.repeat(15) + '|' + ' '.repeat(4) + '|+');
    // console.log(``);
-
    // console.log(``);
    // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
    // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
@@ -393,7 +433,7 @@ function displayMap(locUnits, locMonsters) {
    // console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['hp']} | ${locMonsters[3][1]['hp']} | ${locMonsters[3][2]['hp']} | ${locMonsters[3][3]['hp']} | ${locMonsters[3][4]['hp']} | ${locMonsters[3][5]['hp']} | ${locMonsters[3][6]['hp']} |`));
    // console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['hp']} | ${locMonsters[4][1]['hp']} | ${locMonsters[4][2]['hp']} | ${locMonsters[4][3]['hp']} | ${locMonsters[4][4]['hp']} | ${locMonsters[4][5]['hp']} | ${locMonsters[4][6]['hp']} |`));
    // console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['hp']} | ${locMonsters[5][1]['hp']} | ${locMonsters[5][2]['hp']} | ${locMonsters[5][3]['hp']} | ${locMonsters[5][4]['hp']} | ${locMonsters[5][5]['hp']} | ${locMonsters[5][6]['hp']} |`));
-   console.log(`┌` + '─'.repeat(118) + `┐`);
+   // console.log(`┌` + '─'.repeat(118) + `┐`);
 }
 
 const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) => {
@@ -440,9 +480,8 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
       displayMap(locUnits, locMonsters);
 
       //Logs 출력
-      logs.forEach((log) => console.log(log));
-      console.log(displayMonsters.length);
-      console.log(`└` + '─'.repeat(118) + `┘`);
+      // logs.forEach((log) => console.log(log));
+      // console.log(`└` + '─'.repeat(118) + `┘`);
 
       //기본 선택문
       console.log(chalk.green(`\n1. ${choiseStr[0]} 2. ${choiseStr[1]} 3. ${choiseStr[2]} 4. ${choiseStr[3]}`));
