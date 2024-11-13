@@ -3,53 +3,100 @@ import readlineSync from 'readline-sync';
 import { Castle } from './models/castle.js';
 import { Monster } from './models/monster.js';
 import { Unit } from './models/unit.js';
+import { Item } from './models/item.js';
 import * as Items from './constants/items.js';
+import * as GameSystem from './constants/settings.js';
 import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
 
-function displayStatus(stage, wave, turn, castle, locMonsters) {
-   const line = chalk.magentaBright('='.repeat(71));
-   let imogi = '🗡️';
-   let imogi2 = ' ';
-   console.log(chalk.magentaBright(`\n=== Current Status ===`));
-   console.log(chalk.cyanBright(`| Stage: ${stage} Wave: ${wave} Next Wave: ${turn} 턴`));
-   console.log(chalk.blueBright(`| 성 내구도 ${castle.hp}`));
-   console.log(chalk.blueBright(`| 유닛 정보 종류 등급 개수 공격력 `));
-   if (locMonsters.length > 0) {
-      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 ${locMonsters[0][0]['name']} ${locMonsters[0][0]['hp']} ${locMonsters[0][0]['damage']}|`));
-   } else {
-      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 |`));
+function byteCount(str) {
+   let count = 0;
+   for (let i = 0; i < str.length; i++) {
+      let charCode = str.charCodeAt(i);
+      if (charCode <= 0x7f) {
+         count += 1;
+      } else if (charCode <= 0x7ff) {
+         count += 2;
+      } else if (charCode <= 0xffff) {
+         count += 3;
+      } else {
+         count += 4;
+      }
    }
-   console.log(chalk.magentaBright(`=====================\n`));
+   return count;
+}
+
+function displayStatus(stage, wave, turn, castle, unitStr, locUnits, locMonsters) {
+   let maxCol = 120;
+   let statusText = `│ 난이도: 보통 | 스테이지: ${stage} | 웨이브: ${wave} | 다음 웨이브: ${turn}턴 | 성 체력: ${castle.hp}/${Settings.maxCastleHp}`;
+   let blank = maxCol - statusText.length - 22; //왜 22를 빼야할까? byte 연관인 것 같은데...
+   console.log(`┌` + '─'.repeat(118) + `┐`);
+   console.log(`${statusText}` + ' '.repeat(blank) + `│`);
+   console.log(`└` + '─'.repeat(118) + `┘`);
+
+   let unitGradeStart = [`☆    `, `☆☆  `, `☆☆☆`];
+   console.log(`┌─ ` + ` 유닛 정보 ` + '─'.repeat(45) + `┐` + `┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
+   console.log(`│` + ' '.repeat(58) + `│` + `│` + ' '.repeat(58) + `│`);
+   console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│` + `│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[0][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[0][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[0][0] ? unitGradeStart[locUnits[0][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[0][0] ? (locUnits[0][0]['damage'].toString().length === 1 ? ' ' + locUnits[0][0]['damage'] : locUnits[0][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[0][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[0][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[0][1] ? unitGradeStart[locUnits[0][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[0][1] ? (locUnits[0][1]['damage'].toString().length === 1 ? ' ' + locUnits[0][1]['damage'] : locUnits[0][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[1][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[1][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[1][0] ? unitGradeStart[locUnits[1][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[1][0] ? (locUnits[1][0]['damage'].toString().length === 1 ? ' ' + locUnits[1][0]['damage'] : locUnits[1][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[1][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[1][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[1][1] ? unitGradeStart[locUnits[1][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[1][1] ? (locUnits[1][1]['damage'].toString().length === 1 ? ' ' + locUnits[1][1]['damage'] : locUnits[1][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[2][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[2][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[2][0] ? unitGradeStart[locUnits[2][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[2][0] ? (locUnits[2][0]['damage'].toString().length === 1 ? ' ' + locUnits[2][0]['damage'] : locUnits[2][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[2][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[2][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[2][1] ? unitGradeStart[locUnits[2][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[2][1] ? (locUnits[2][1]['damage'].toString().length === 1 ? ' ' + locUnits[2][1]['damage'] : locUnits[2][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[3][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[3][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[3][0] ? unitGradeStart[locUnits[3][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[3][0] ? (locUnits[3][0]['damage'].toString().length === 1 ? ' ' + locUnits[3][0]['damage'] : locUnits[3][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[3][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[3][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[3][1] ? unitGradeStart[locUnits[3][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[3][1] ? (locUnits[3][1]['damage'].toString().length === 1 ? ' ' + locUnits[3][1]['damage'] : locUnits[3][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[4][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[4][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[4][0] ? unitGradeStart[locUnits[4][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[4][0] ? (locUnits[4][0]['damage'].toString().length === 1 ? ' ' + locUnits[4][0]['damage'] : locUnits[4][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[4][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[4][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[4][1] ? unitGradeStart[locUnits[4][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[4][1] ? (locUnits[4][1]['damage'].toString().length === 1 ? ' ' + locUnits[4][1]['damage'] : locUnits[4][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[5][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[5][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[5][0] ? unitGradeStart[locUnits[5][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[5][0] ? (locUnits[5][0]['damage'].toString().length === 1 ? ' ' + locUnits[5][0]['damage'] : locUnits[5][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[5][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[5][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[5][1] ? unitGradeStart[locUnits[5][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[5][1] ? (locUnits[5][1]['damage'].toString().length === 1 ? ' ' + locUnits[5][1]['damage'] : locUnits[5][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│` + `│` + ' '.repeat(58) + `│`);
+   console.log(`└` + '─'.repeat(58) + `┘` + `└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─ ` + ` 유닛 정보 ` + '─'.repeat(45) + `┐`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `1` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆    ` + ' '.repeat(3) + ` 2` + ' '.repeat(9) + `1` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆    ` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `2` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(9) + `2` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `3` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆☆` + ' '.repeat(3) + `10` + ' '.repeat(9) + `3` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆☆` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `4` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆    ` + ' '.repeat(3) + ` 2` + ' '.repeat(9) + `4` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆    ` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `5` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(9) + `5` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `6` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆☆` + ' '.repeat(3) + `10` + ' '.repeat(9) + `6` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆☆` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─────────────┐`);
+   // console.log(`│ ┌─────────┐ │`);
+   // console.log(`│ │         │ │`);
+   // console.log(`│ │         │ │`);
+   // console.log(`│ │         │ │`);
+   // console.log(`│ └─────────┘ │`);
+   // console.log(`└─────────────┘`);
+
+   // console.log(chalk.white(`─ │ ┌ ┐ ┘ └ ├ ┬ ┤ ┴ ┼ ━ ┃ ┏ ┓ ┛ ┗ ┣ ┳ ┫ ┻ ╋ ┠ ┯ ┨ ┷ ┿ ┝ ┰ ┥ ┸ ╂ ┒ ┑ ┚ ┙ ┖ ┕ ┎ ┍ ┞ ┟ ┡ ┢ ┦ ┧ ┩ ┪ ┭ ┮ ┱ ┲ ┵ ┶ ┹ ┺ ┽ ┾ ╀ ╁ ╃ ╄ ╅ ╆ ╇ ╈ ╉ ╊`));
 }
 
 function displayMap(locUnits, locMonsters) {
-   const line = chalk.magentaBright('='.repeat(71));
    //백업용
    // console.log(line);
-   // console.log(chalk.white('                   _____'));
-   // console.log(chalk.white('                  <_____|'));
-   // console.log(chalk.white('                        |'));
-   // console.log(chalk.white('  ___                  .|'));
-   // console.log(chalk.white(' <___|               .\'/`\`.'));
-   // console.log(chalk.white('  _  |  _   _      .\' / :`.\`.'));
-   // console.log(chalk.white('_|;|_|_|;|_|;|__ .\'  /  : .\'|_'));
-   // console.log(chalk.white('     |          --------.\' .\'|'));
-   // console.log(chalk.white('   / ^\\         | |###| |.\'  |'));
-   // console.log(chalk.white(`  /  | \\     .\'        .\'    |`));
-   // console.log(chalk.white(` /   |  \\  .\'        .\'      |`));
-   // console.log(chalk.white('/____|___\\\'        .\'        |'));
-   // console.log(chalk.white('|         |      .\' ㅡ\\     .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _'));
-   // console.log(chalk.white('|    _    |    .\'  /+++|  .\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|   |#|   |  .\'   ㅣ+++|.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|  =====  |.\'     ㅣ++.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |       ㅣ.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |      .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |    .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |  .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __'));
-   // console.log(chalk.white('|_________|.\'                                                         \n'));
-   // console.log(line);
-   //
    // console.log(chalk.white('                   _____'));
    // console.log(chalk.white('                  <_____|'));
    // console.log(chalk.white('                        |'));
@@ -58,56 +105,115 @@ function displayMap(locUnits, locMonsters) {
    // console.log(chalk.white("  _  |  _   _      .' / :`.`."));
    // console.log(chalk.white("_|;|_|_|;|_|;|__ .'  /  : .'|_"));
    // console.log(chalk.white("     |          --------.' .'|"));
-   // console.log(chalk.white("   / ^ \\        | |###| |.'  |"));
-   // console.log(chalk.white(`  /  |  \\     .\'    ${locUnits[0][1]['name']}${locUnits[0][0]['name']}   .\'    |`));
-   // console.log(chalk.white(` /   |   \\  .\'      ${locUnits[1][1]['name']}${locUnits[1][0]['name']} .\'      |`));
-   // console.log(chalk.white(`/____|____\\'    ${locUnits[2][1]['name']}${locUnits[2][0]['name']}   .'        |`));
-   // console.log(chalk.white(`|         |     ${locUnits[3][1]['name']}${locUnits[3][0]['name']} .' ㅡ\\     .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _`));
-   // console.log(chalk.white(`|    _    |    ${locUnits[4][1]['name']}${locUnits[4][0]['name']}.'  /+++|  .'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|   |#|   |${locUnits[5][1]['name']}${locUnits[5][0]['name']}  .'   ㅣ+++|.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|  =====  |.'     ㅣ++.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |       ㅣ.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |      .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __`));
-   // console.log(chalk.white(`|_________|.'                                                         \n`));
+   // console.log(chalk.white("   / ^\\         | |###| |.'  |"));
+   // console.log(chalk.white(`  /  | \\     .\'        .\'    |`));
+   // console.log(chalk.white(` /   |  \\  .\'        .\'      |`));
+   // console.log(chalk.white("/____|___\\'        .'        |"));
+   // console.log(chalk.white("|         |      .' ㅡ\\     .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"));
+   // console.log(chalk.white("|    _    |    .'  /+++|  .'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|   |#|   |  .'   ㅣ+++|.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|  =====  |.'     ㅣ++.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |       ㅣ.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |      .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __"));
+   // console.log(chalk.white("|_________|.'                                                         \n"));
+   // console.log(line);
+   // console.log(``);
+   // console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(7) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(5) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+
+   // console.log(` O /`);
+   // console.log(`<|\\|`);
+   // console.log(`/ \\|)`);
+
+   // console.log(``);
+   // console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(` O / ` + ' '.repeat(2) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(`<|\\| `);
+   // console.log(`/ \\| ` + ' '.repeat(0) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   //
 
    //---------------------------       버퍼                       원거리                        근접
-   console.log(
-      chalk.white(
-         `| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['name']} | ${locMonsters[0][1]['name']} | ${locMonsters[0][2]['name']} | ${locMonsters[0][3]['name']} | ${locMonsters[0][4]['name']} | ${locMonsters[0][5]['name']} | ${locMonsters[0][6]['name']} |`,
-      ),
-   );
+   console.log(chalk.white(`| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['name']} | ${locMonsters[0][1]['name']} | ${locMonsters[0][2]['name']} | ${locMonsters[0][3]['name']} | ${locMonsters[0][4]['name']} | ${locMonsters[0][5]['name']} | ${locMonsters[0][6]['name']} |`));
 
-   console.log(
-      chalk.white(
-         `| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['name']} | ${locMonsters[1][1]['name']} | ${locMonsters[1][2]['name']} | ${locMonsters[1][3]['name']} | ${locMonsters[1][4]['name']} | ${locMonsters[1][5]['name']} | ${locMonsters[1][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['name']} | ${locMonsters[2][1]['name']} | ${locMonsters[2][2]['name']} | ${locMonsters[2][3]['name']} | ${locMonsters[2][4]['name']} | ${locMonsters[2][5]['name']} | ${locMonsters[2][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['name']} | ${locMonsters[3][1]['name']} | ${locMonsters[3][2]['name']} | ${locMonsters[3][3]['name']} | ${locMonsters[3][4]['name']} | ${locMonsters[3][5]['name']} | ${locMonsters[3][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['name']} | ${locMonsters[4][1]['name']} | ${locMonsters[4][2]['name']} | ${locMonsters[4][3]['name']} | ${locMonsters[4][4]['name']} | ${locMonsters[4][5]['name']} | ${locMonsters[4][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['name']} | ${locMonsters[5][1]['name']} | ${locMonsters[5][2]['name']} | ${locMonsters[5][3]['name']} | ${locMonsters[5][4]['name']} | ${locMonsters[5][5]['name']} | ${locMonsters[5][6]['name']} |`,
-      ),
-   );
-   console.log(line);
+   console.log(chalk.white(`| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['name']} | ${locMonsters[1][1]['name']} | ${locMonsters[1][2]['name']} | ${locMonsters[1][3]['name']} | ${locMonsters[1][4]['name']} | ${locMonsters[1][5]['name']} | ${locMonsters[1][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['name']} | ${locMonsters[2][1]['name']} | ${locMonsters[2][2]['name']} | ${locMonsters[2][3]['name']} | ${locMonsters[2][4]['name']} | ${locMonsters[2][5]['name']} | ${locMonsters[2][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['name']} | ${locMonsters[3][1]['name']} | ${locMonsters[3][2]['name']} | ${locMonsters[3][3]['name']} | ${locMonsters[3][4]['name']} | ${locMonsters[3][5]['name']} | ${locMonsters[3][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['name']} | ${locMonsters[4][1]['name']} | ${locMonsters[4][2]['name']} | ${locMonsters[4][3]['name']} | ${locMonsters[4][4]['name']} | ${locMonsters[4][5]['name']} | ${locMonsters[4][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['name']} | ${locMonsters[5][1]['name']} | ${locMonsters[5][2]['name']} | ${locMonsters[5][3]['name']} | ${locMonsters[5][4]['name']} | ${locMonsters[5][5]['name']} | ${locMonsters[5][6]['name']} |`));
+   console.log(`┌` + '─'.repeat(118) + `┐`);
 }
 
-const battle = async (stage, castle, isWin, locUnits) => {
+const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) => {
    let logs = [];
    let wave = 1;
    let turn = 5;
@@ -133,9 +239,10 @@ const battle = async (stage, castle, isWin, locUnits) => {
    //    [false, false, false],
    // ];
 
-   let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', '수리(20~100)']; //기본 선택지
-   let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합']; //조합 선택지
+   let choiseStr = ['유닛 소환', '유닛 조합(확률)', '아이템', `수리(${castle.repairCnt}회)`]; //기본 선택지
+   let mixStr = ['근접 유닛 조합', '원거리 유닛 조합', '무작위 조합(근접,원거리)']; //조합 선택지
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
+   let itemStr = [Items.ITEM_CODE01_NAME, Items.ITEM_CODE02_NAME, Items.ITEM_CODE03_NAME];
 
    //Stage 시작 시 몬스터 소환
    monsterSpawn(logs, locMonsters, stage, wave);
@@ -144,11 +251,12 @@ const battle = async (stage, castle, isWin, locUnits) => {
       console.clear();
 
       //상단 Display출력
-      displayStatus(stage, wave, turn, castle, monsters);
+      displayStatus(stage, wave, turn, castle, unitStr, locUnits, monsters);
       displayMap(locUnits, locMonsters);
 
       //Logs 출력
       logs.forEach((log) => console.log(log));
+      console.log(`└` + '─'.repeat(118) + `┘`);
 
       //기본 선택문
       console.log(chalk.green(`\n1. ${choiseStr[0]} 2. ${choiseStr[1]} 3. ${choiseStr[2]} 4. ${choiseStr[3]}`));
@@ -311,12 +419,7 @@ const battle = async (stage, castle, isWin, locUnits) => {
                         }
                      }
 
-                     if (
-                        (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) ||
-                        (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) ||
-                        (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) ||
-                        (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1)
-                     ) {
+                     if ((unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) || (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) || (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) || (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1)) {
                         //등급별 조합 가능 여부
                         let isGrade1 = (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) || (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) ? true : false;
                         let isGrade2 = (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) || (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1) ? true : false;
@@ -364,9 +467,7 @@ const battle = async (stage, castle, isWin, locUnits) => {
                               isSuccess = true;
                            } else {
                               //실패
-                              unitType === 1
-                                 ? (locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][unitType - 1] = false)
-                                 : (locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][unitType - 1] = false);
+                              unitType === 1 ? (locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][unitType - 1] = false) : (locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][unitType - 1] = false);
                               logsPush(logs, chalk.red(`[조합 실패] ${unitStr[unitType - 1]} 유닛이 소모되었습니다.`));
                               break;
                            }
@@ -413,9 +514,7 @@ const battle = async (stage, castle, isWin, locUnits) => {
                               isSuccess = true;
                            } else {
                               //실패
-                              unitType === 1
-                                 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false)
-                                 : (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false);
+                              unitType === 1 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false) : (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false);
                               logsPush(logs, chalk.red(`[조합 실패] 중급 ${unitStr[unitType - 1]} 유닛이 소모되었습니다.`));
                               break;
                            }
@@ -434,7 +533,8 @@ const battle = async (stage, castle, isWin, locUnits) => {
                   } else {
                      break;
                   }
-
+               case '4':
+                  continue;
                default:
                   logsPush(logs, chalk.red(`올바른 선택을 하세요.`));
                   continue;
@@ -442,26 +542,116 @@ const battle = async (stage, castle, isWin, locUnits) => {
             break;
          case '3':
             //아이템
-            console.log(chalk.green(`\n1. ${Items.ITEM_CODE01_NAME} 2. ${Items.ITEM_CODE02_NAME} 3. ${Items.ITEM_CODE03_NAME} 4. 취소`));
+            console.log(chalk.green(`\n1. ${itemStr[0]} (${inventory[0].ea}개) 2. ${itemStr[1]} (${inventory[1].ea}개) 3. ${itemStr[2]} (${inventory[2].ea}개) 4. 취소`));
             const choiceItem = readlineSync.question('당신의 선택은? ');
-            useItem(choiceItem);
-            break;
+            let isSelectItem = false;
+            switch (choiceItem) {
+               case '1': //버프스톤
+                  const isHave1 = checkItem(logs, inventory, itemStr, Number(choiceItem));
+                  if (!isHave1) continue;
+
+                  //이미 적용중이면 pass
+                  if (itemBuffTurn > 0) {
+                     logsPush(logs, chalk.red(`${itemStr[0]} 의 효과가 남아있어 사용할 수 없습니다. (남은 턴: ${itemBuffTurn})`));
+                     continue;
+                  }
+
+                  buffItemControl(locUnits, true);
+                  itemBuffTurn = 5;
+                  logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 을 사용하였습니다.`));
+                  inventory[Number(choiceItem) - 1].useItem();
+                  isSelectItem = true;
+                  break;
+
+               case '2': //두루마리
+                  const isHave2 = checkItem(logs, inventory, itemStr, Number(choiceItem));
+                  if (!isHave2) continue;
+                  logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 를 사용하였습니다.`));
+                  for (let i = 0; i < locMonsters.length; i++) {
+                     for (let j = 0; j < locMonsters[0].length; j++) {
+                        if (locMonsters[i][j]) {
+                           let damage = Math.floor(Math.random() * 9 + 1);
+                           locMonsters[i][j].receveDamage(damage);
+                           logsPush(logs, chalk.white(`${locMonsters[i][j]['name']} 에게 ${damage} 데미지를 주었습니다.`));
+                        }
+                     }
+                  }
+                  inventory[Number(choiceItem) - 1].useItem();
+                  isSelectItem = true;
+                  break;
+
+               case '3': //원기옥
+                  const isHave3 = checkItem(logs, inventory, itemStr, Number(choiceItem));
+                  if (!isHave3) continue;
+
+                  let sumAttack = 0;
+                  //소환된 유닛의 총 공격력 계산
+                  for (let i = 0; i < locUnits.length; i++) {
+                     for (let j = 0; j < locUnits[0].length; j++) {
+                        if (locUnits[i][j]) {
+                           sumAttack += locUnits[i][j].attack();
+                        }
+                     }
+                  }
+
+                  let getMonstersLoc = [];
+                  //현재 몬스터 위치를 getMonstersLoc 담는다.
+                  for (let i = 0; i < locMonsters.length; i++) {
+                     for (let j = 0; j < locMonsters[0].length; j++) {
+                        if (locMonsters[i][j]) {
+                           getMonstersLoc.push([i, j]);
+                        }
+                     }
+                  }
+
+                  //getMonstersLoc legnth로 대상 몬스터 뽑기
+                  let selectMonster = Math.floor(Math.random() * getMonstersLoc.length);
+                  locMonsters[getMonstersLoc[selectMonster][0]][getMonstersLoc[selectMonster][1]].receveDamage(sumAttack * 2);
+                  logsPush(logs, chalk.white(`${inventory[Number(choiceItem) - 1]['name']} 을 사용하였습니다.`));
+                  logsPush(logs, chalk.white(`${locMonsters[getMonstersLoc[selectMonster][0]][getMonstersLoc[selectMonster][1]]['name']} 에게 ${sumAttack * 2} 데미지를 주었습니다.`));
+
+                  inventory[Number(choiceItem) - 1].useItem();
+                  isSelectItem = true;
+                  break;
+
+               case '4':
+                  continue;
+
+               default:
+                  logsPush(logs, chalk.red(`올바른 선택을 하세요.`));
+                  continue;
+            }
+            if (isSelectItem) break;
+            else continue;
          case '4':
             //수리
+            if (castle.hp === Settings.maxCastleHp) {
+               logsPush(logs, chalk.red(`성의 체력이 이미 가득 차 있습니다.`));
+               continue;
+            }
+
+            if (castle.repairCnt === 0) {
+               logsPush(logs, chalk.red(`도구가 고갈되어 더 이상 수리할 수 없습니다.`));
+               continue;
+            }
+
             if (Math.floor(Math.random() * 100 + 1) <= 5) {
                //풀피 회복
                castle.hp = Settings.maxCastleHp;
                logsPush(logs, chalk.white(`5%의 기적! 성의 체력이 최대치로 회복했습니다.`));
             } else {
-               const baseN = 100;
-               let res = Math.floor(Math.random() * baseN + 20);
+               const maxRepairHp = 100;
+               let repairHp = Math.floor(Math.random() * maxRepairHp + 20);
 
-               if (res >= baseN) {
-                  res = baseN;
+               if (repairHp >= maxRepairHp) {
+                  repairHp = maxRepairHp;
                }
-               let beforeHp = castle.hp;
-               castle.hp = castle.hp + res > Settings.maxCastleHp ? Settings.maxCastleHp : castle.hp + res;
-               logsPush(logs, chalk.white(`성의 체력이 ${castle.hp - beforeHp} 회복했습니다.`));
+
+               if (castle.hp + repairHp > Settings.maxCastleHp) repairHp = Settings.maxCastleHp - castle.hp;
+
+               castle.repair(repairHp);
+
+               logsPush(logs, chalk.white(`성의 체력이 ${repairHp} 회복했습니다.`));
             }
             break;
          case '0':
@@ -488,7 +678,7 @@ const battle = async (stage, castle, isWin, locUnits) => {
             turn--;
          }
 
-         await turnEndAction(logs, locUnits, locMonsters, castle);
+         await turnEndAction(logs, locUnits, locMonsters, castle, inventory);
       } else if (wave === Settings.maxWave) {
          if (monsters.length === 0) {
             isStageClear = true;
@@ -498,6 +688,15 @@ const battle = async (stage, castle, isWin, locUnits) => {
             }
          }
       }
+
+      //버프 아이템 턴 소모처리
+      if (itemBuffTurn > 0) {
+         if (itemBuffTurn - 1 === 0) {
+            logsPush(logs, chalk.white(`${itemStr[0]}의 효과가 사라졌습니다.`));
+            buffItemControl(locUnits, false);
+         }
+         itemBuffTurn--;
+      }
    }
 
    return isWin;
@@ -506,10 +705,12 @@ const battle = async (stage, castle, isWin, locUnits) => {
 export async function startGame() {
    console.clear();
 
-   const castle = new Castle(1000, 0);
+   const castle = new Castle(1000, 0, 3);
+   const inventory = createInventory();
+
    let stage = 1;
    let isWin = false;
-
+   let itemBuffTurn = 0;
    let locUnits = [
       [false, false, false],
       [false, false, false],
@@ -520,7 +721,7 @@ export async function startGame() {
    ];
 
    while (stage <= Settings.maxStage) {
-      isWin = await battle(stage, castle, isWin, locUnits);
+      isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn);
       // 스테이지 클리어 및 게임 종료 조건
 
       //최종스테이지고 isWin = true면 클리어 아니면 패배
@@ -541,12 +742,12 @@ export async function startGame() {
 }
 
 //유닛 생성
-const createUnit = (locUnits, idx, unitStr, grade) => {
-   let gradeText = grade === 1 ? '' : grade === 2 ? '중급 ' : '상급';
+const createUnit = (locUnits, idx, unitStr, grade, isUnitBuff) => {
+   let gradeText = grade === 1 ? '' : grade === 2 ? '중급 ' : '상급 ';
 
    for (let i = 0; i < locUnits.length; i++) {
       if (!locUnits[i][Number(idx) - 1]) {
-         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10);
+         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10, false, isUnitBuff);
          return true;
       }
    }
@@ -583,7 +784,7 @@ const monsterSpawn = (logs, locMonsters, stage, wave) => {
 };
 
 //턴 종료
-const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
+const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory) => {
    /***
     * 아군 행동
     *
@@ -604,12 +805,16 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
             for (let k = range; k > 0; k--) {
                if (locMonsters[j][k - 1]) {
                   locMonsters[j][k - 1].hp -= locUnits[j][i].attack();
+
                   //처치 시 삭제
                   if (locMonsters[j][k - 1].hp <= 0) {
-                     logsPush(logs, chalk.white(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
+                     logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 를 처치하였습니다.`));
                      locMonsters[j][k - 1] = false;
 
+                     getItemRate(logs, inventory); //아이템 획득 여부?
                      //킬 카운트
+                  } else {
+                     logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
                   }
 
                   isAttack = true;
@@ -620,16 +825,21 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
             //내 앞줄에 몹이 없는 것 확인
             if (!isAttack) {
                for (let k = range; k > 0; k--) {
-                  //대상 찾기(고도화)
+                  //대상 찾기(고도화)x
                   for (let n = 0; n < locMonsters.length; n++) {
                      if (locMonsters[n][k - 1]) {
                         locMonsters[n][k - 1].hp -= locUnits[j][i].attack();
+
                         //처치 시 삭제
-                        if (locMonsters[j][k - 1].hp <= 0) {
-                           logsPush(logs, chalk.white(`${locMonsters[j][k - 1]['name']} 을 처치하였습니다.`));
-                           locMonsters[j][k - 1] = false;
+                        if (locMonsters[n][k - 1].hp <= 0) {
+                           logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 를 처치하였습니다.`));
+                           locMonsters[n][k - 1] = false;
+
+                           getItemRate(logs, inventory); //아이템 획득 여부?
 
                            //킬 카운트
+                        } else {
+                           logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
                         }
 
                         isAttack = true;
@@ -676,25 +886,24 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle) => {
    if (sumDamage > 0) logsPush(logs, chalk.white(`몬스터의 공격으로 성의 체력이 ${sumDamage} 감소 했습니다.`));
 };
 
-function checkItem(idx) {
-   //해당 아이템이 있는지 체크
-   //있으면 사용
-   //없으면
+function checkItem(logs, inventory, itemStr, idx) {
+   let isHave = true;
+   if (inventory[idx - 1]['ea'] === 0) {
+      logsPush(logs, chalk.red(`${itemStr[idx - 1]} 이 없습니다.`));
+      isHave = false;
+   }
+   return isHave;
 }
 
-const checkAchievement = () => {
-   /***
-    * 몹 처치수 업적
-    */
-   Settings.killCount;
-
-   /***
-    * 난이도 업적
-    */
-
-   /***
-    * 조합 업적
-    */
+const buffItemControl = (locUnits, isBuff) => {
+   for (let i = 0; i < locUnits.length; i++) {
+      for (let j = 0; j < locUnits[0].length; j++) {
+         if (locUnits[j][i]) {
+            locUnits[j][i]['isItemBuff'] = isBuff;
+            locUnits[j][i].itemBuff();
+         }
+      }
+   }
 };
 
 function endGame(isWin) {
@@ -707,3 +916,22 @@ function endGame(isWin) {
       //초기 화면 이동
    }
 }
+
+const createInventory = () => {
+   const inventory = [];
+   inventory.push(new Item(Items.ITEM_CODE01_CODE, Items.ITEM_CODE01_NAME, Items.ITEM_CODE01_DESC, 0));
+   inventory.push(new Item(Items.ITEM_CODE02_CODE, Items.ITEM_CODE02_NAME, Items.ITEM_CODE02_DESC, 0));
+   inventory.push(new Item(Items.ITEM_CODE03_CODE, Items.ITEM_CODE03_NAME, Items.ITEM_CODE03_DESC, 0));
+   return inventory;
+};
+
+const getItemRate = (logs, inventory) => {
+   //개별로 확률이 존재. 하지만
+   const itemsRates = [Items.ITEM_CODE01_RATE, Items.ITEM_CODE02_RATE, Items.ITEM_CODE03_RATE];
+
+   for (let i = 0; i < itemsRates.length; i++) {
+      if (Math.floor(Math.random() * 100 + 1) / 100 <= itemsRates[i]) {
+         logsPush(logs, chalk.blue(inventory[i].getItem()));
+      }
+   }
+};

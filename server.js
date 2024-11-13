@@ -3,26 +3,27 @@ import figlet from 'figlet';
 import readlineSync from 'readline-sync';
 import { startGame } from './game.js';
 import { exec } from 'child_process'; //콘솔 제어
+import * as GameSystem from './constants/settings.js';
 
-async function displayChage() {
-   await exec('mode con: cols=150 lines=55', (error, stdout, stderr) => {
+function displayChage() {
+   exec(`mode con: cols=${GameSystem.CONSOLE_COL} lines=${GameSystem.CONSOLE_ROW}`, (error, stdout, stderr) => {
       if (error) {
          console.error(`Error resizing cmd: ${error.message}`);
          process.exit(0);
-         return;
+         // return;
       }
-      // console.log('Command prompt resized successfully.');
    });
 }
 
 // 로비 화면을 출력하는 함수
+
 function displayLobby() {
    console.clear();
 
    // 타이틀 텍스트
    console.log(
       chalk.cyan(
-         figlet.textSync('RL- Javascript\nCastle Defence Game', {
+         figlet.textSync('\nCastle Defence Game', {
             font: 'Standard',
             horizontalLayout: 'default',
             verticalLayout: 'default',
@@ -57,7 +58,7 @@ function displayLobby() {
    console.log(line);
 
    // 게임 이름
-   console.log(chalk.yellowBright.bold('CLI 로그라이크 디펜스 게임에 오신것을 환영합니다!🙃'));
+   console.log(chalk.yellowBright.bold('CLI 로그라이크 디펜스 게임에 오신것을 환영합니다!'));
 
    // 설명 텍스트
    console.log(chalk.green('옵션을 선택해주세요.'));
@@ -125,12 +126,20 @@ function displayAchivements() {
    console.clear();
    let logs = [];
 
+   console.log(`┌───────────┐`);
+   // console.log(`│┌─────────┐│`);
+   // console.log(`││         ││`);
+   // console.log(`││         ││`);
+   // console.log(`││         ││`);
+   // console.log(`│└─────────┘│`);
+   // console.log(`└───────────┘`);
+
    // const line = chalk.magentaBright('='.repeat(71) + '\n');
-   logs.push(chalk.whiteBright('#' + '.'.repeat(78) + '#'));
-   for (let i = 0; i < 50; i++) {
-      logs.push(chalk.whiteBright('.'.repeat(79) + '#'));
-   }
-   logs.forEach((log) => console.log(log));
+   // logs.push(chalk.whiteBright('#' + '.'.repeat(78) + '#'));
+   // for (let i = 0; i < 50; i++) {
+   //    logs.push(chalk.whiteBright('.'.repeat(79) + '#'));
+   // }
+   // logs.forEach((log) => console.log(log));
 
    const choice = readlineSync.question("초기화면:'ENTER'");
 }
