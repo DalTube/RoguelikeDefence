@@ -5,52 +5,98 @@ import { Monster } from './models/monster.js';
 import { Unit } from './models/unit.js';
 import { Item } from './models/item.js';
 import * as Items from './constants/items.js';
+import * as GameSystem from './constants/settings.js';
 import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
 
-function displayStatus(stage, wave, turn, castle, locUnits, locMonsters) {
-   const line = chalk.magentaBright('='.repeat(71));
-   let imogi = '🗡️';
-   let imogi2 = ' ';
-   console.log(chalk.magentaBright(`\n=== Current Status ===`));
-   console.log(chalk.cyanBright(`| Stage: ${stage} Wave: ${wave} Next Wave: ${turn} 턴`));
-   console.log(chalk.blueBright(`| 성 내구도 ${castle.hp}`));
-   console.log(chalk.blueBright(`| 유닛 정보 종류 등급 개수 공격력 ${locUnits[0][0]['name']} ${locUnits[0][0]['damage']} ${locUnits[0][0]['isItemBuff']} ${locUnits[0][0]['isUnitBuff']}`));
-   if (locMonsters.length > 0) {
-      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 ${locMonsters[0][0]['name']} ${locMonsters[0][0]['hp']} ${locMonsters[0][0]['damage']}|`));
-   } else {
-      console.log(chalk.redBright(`| 몬스터 정보 이름 HP 공격력 |`));
+function byteCount(str) {
+   let count = 0;
+   for (let i = 0; i < str.length; i++) {
+      let charCode = str.charCodeAt(i);
+      if (charCode <= 0x7f) {
+         count += 1;
+      } else if (charCode <= 0x7ff) {
+         count += 2;
+      } else if (charCode <= 0xffff) {
+         count += 3;
+      } else {
+         count += 4;
+      }
    }
-   console.log(chalk.magentaBright(`=====================\n`));
+   return count;
+}
+
+function displayStatus(stage, wave, turn, castle, unitStr, locUnits, locMonsters) {
+   let maxCol = 120;
+   let statusText = `│ 난이도: 보통 | 스테이지: ${stage} | 웨이브: ${wave} | 다음 웨이브: ${turn}턴 | 성 체력: ${castle.hp}/${Settings.maxCastleHp}`;
+   let blank = maxCol - statusText.length - 22; //왜 22를 빼야할까? byte 연관인 것 같은데...
+   console.log(`┌` + '─'.repeat(118) + `┐`);
+   console.log(`${statusText}` + ' '.repeat(blank) + `│`);
+   console.log(`└` + '─'.repeat(118) + `┘`);
+
+   let unitGradeStart = [`☆    `, `☆☆  `, `☆☆☆`];
+   console.log(`┌─ ` + ` 유닛 정보 ` + '─'.repeat(45) + `┐` + `┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
+   console.log(`│` + ' '.repeat(58) + `│` + `│` + ' '.repeat(58) + `│`);
+   console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│` + `│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[0][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[0][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[0][0] ? unitGradeStart[locUnits[0][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[0][0] ? (locUnits[0][0]['damage'].toString().length === 1 ? ' ' + locUnits[0][0]['damage'] : locUnits[0][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[0][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[0][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[0][1] ? unitGradeStart[locUnits[0][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[0][1] ? (locUnits[0][1]['damage'].toString().length === 1 ? ' ' + locUnits[0][1]['damage'] : locUnits[0][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[1][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[1][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[1][0] ? unitGradeStart[locUnits[1][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[1][0] ? (locUnits[1][0]['damage'].toString().length === 1 ? ' ' + locUnits[1][0]['damage'] : locUnits[1][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[1][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[1][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[1][1] ? unitGradeStart[locUnits[1][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[1][1] ? (locUnits[1][1]['damage'].toString().length === 1 ? ' ' + locUnits[1][1]['damage'] : locUnits[1][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[2][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[2][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[2][0] ? unitGradeStart[locUnits[2][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[2][0] ? (locUnits[2][0]['damage'].toString().length === 1 ? ' ' + locUnits[2][0]['damage'] : locUnits[2][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[2][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[2][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[2][1] ? unitGradeStart[locUnits[2][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[2][1] ? (locUnits[2][1]['damage'].toString().length === 1 ? ' ' + locUnits[2][1]['damage'] : locUnits[2][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[3][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[3][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[3][0] ? unitGradeStart[locUnits[3][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[3][0] ? (locUnits[3][0]['damage'].toString().length === 1 ? ' ' + locUnits[3][0]['damage'] : locUnits[3][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[3][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[3][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[3][1] ? unitGradeStart[locUnits[3][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[3][1] ? (locUnits[3][1]['damage'].toString().length === 1 ? ' ' + locUnits[3][1]['damage'] : locUnits[3][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[4][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[4][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[4][0] ? unitGradeStart[locUnits[4][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[4][0] ? (locUnits[4][0]['damage'].toString().length === 1 ? ' ' + locUnits[4][0]['damage'] : locUnits[4][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[4][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[4][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[4][1] ? unitGradeStart[locUnits[4][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[4][1] ? (locUnits[4][1]['damage'].toString().length === 1 ? ' ' + locUnits[4][1]['damage'] : locUnits[4][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   console.log(`│` + ' '.repeat(4) + `${locUnits[5][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[5][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[5][0] ? unitGradeStart[locUnits[5][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[5][0] ? (locUnits[5][0]['damage'].toString().length === 1 ? ' ' + locUnits[5][0]['damage'] : locUnits[5][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[5][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[5][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[5][1] ? unitGradeStart[locUnits[5][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[5][1] ? (locUnits[5][1]['damage'].toString().length === 1 ? ' ' + locUnits[5][1]['damage'] : locUnits[5][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│` + `│` + ' '.repeat(58) + `│`);
+   console.log(`└` + '─'.repeat(58) + `┘` + `└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─ ` + ` 유닛 정보 ` + '─'.repeat(45) + `┐`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `1` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆    ` + ' '.repeat(3) + ` 2` + ' '.repeat(9) + `1` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆    ` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `2` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(9) + `2` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `3` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆☆` + ' '.repeat(3) + `10` + ' '.repeat(9) + `3` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆☆` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `4` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆    ` + ' '.repeat(3) + ` 2` + ' '.repeat(9) + `4` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆    ` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `5` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(9) + `5` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `6` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆☆` + ' '.repeat(3) + `10` + ' '.repeat(9) + `6` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆☆` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+   // console.log(`│` + ' '.repeat(58) + `│`);
+   // console.log(`└` + '─'.repeat(58) + `┘`);
+
+   // console.log(`┌─────────────┐`);
+   // console.log(`│ ┌─────────┐ │`);
+   // console.log(`│ │         │ │`);
+   // console.log(`│ │         │ │`);
+   // console.log(`│ │         │ │`);
+   // console.log(`│ └─────────┘ │`);
+   // console.log(`└─────────────┘`);
+
+   // console.log(chalk.white(`─ │ ┌ ┐ ┘ └ ├ ┬ ┤ ┴ ┼ ━ ┃ ┏ ┓ ┛ ┗ ┣ ┳ ┫ ┻ ╋ ┠ ┯ ┨ ┷ ┿ ┝ ┰ ┥ ┸ ╂ ┒ ┑ ┚ ┙ ┖ ┕ ┎ ┍ ┞ ┟ ┡ ┢ ┦ ┧ ┩ ┪ ┭ ┮ ┱ ┲ ┵ ┶ ┹ ┺ ┽ ┾ ╀ ╁ ╃ ╄ ╅ ╆ ╇ ╈ ╉ ╊`));
 }
 
 function displayMap(locUnits, locMonsters) {
-   const line = chalk.magentaBright('='.repeat(71));
    //백업용
    // console.log(line);
-   // console.log(chalk.white('                   _____'));
-   // console.log(chalk.white('                  <_____|'));
-   // console.log(chalk.white('                        |'));
-   // console.log(chalk.white('  ___                  .|'));
-   // console.log(chalk.white(' <___|               .\'/`\`.'));
-   // console.log(chalk.white('  _  |  _   _      .\' / :`.\`.'));
-   // console.log(chalk.white('_|;|_|_|;|_|;|__ .\'  /  : .\'|_'));
-   // console.log(chalk.white('     |          --------.\' .\'|'));
-   // console.log(chalk.white('   / ^\\         | |###| |.\'  |'));
-   // console.log(chalk.white(`  /  | \\     .\'        .\'    |`));
-   // console.log(chalk.white(` /   |  \\  .\'        .\'      |`));
-   // console.log(chalk.white('/____|___\\\'        .\'        |'));
-   // console.log(chalk.white('|         |      .\' ㅡ\\     .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _'));
-   // console.log(chalk.white('|    _    |    .\'  /+++|  .\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|   |#|   |  .\'   ㅣ+++|.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|  =====  |.\'     ㅣ++.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |       ㅣ.\'🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |      .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |    .\' 🐉  🐉  🐉     🐉     🐉     🐉     🐉'));
-   // console.log(chalk.white('|         |  .\'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __'));
-   // console.log(chalk.white('|_________|.\'                                                         \n'));
-   // console.log(line);
-   //
    // console.log(chalk.white('                   _____'));
    // console.log(chalk.white('                  <_____|'));
    // console.log(chalk.white('                        |'));
@@ -59,53 +105,112 @@ function displayMap(locUnits, locMonsters) {
    // console.log(chalk.white("  _  |  _   _      .' / :`.`."));
    // console.log(chalk.white("_|;|_|_|;|_|;|__ .'  /  : .'|_"));
    // console.log(chalk.white("     |          --------.' .'|"));
-   // console.log(chalk.white("   / ^ \\        | |###| |.'  |"));
-   // console.log(chalk.white(`  /  |  \\     .\'    ${locUnits[0][1]['name']}${locUnits[0][0]['name']}   .\'    |`));
-   // console.log(chalk.white(` /   |   \\  .\'      ${locUnits[1][1]['name']}${locUnits[1][0]['name']} .\'      |`));
-   // console.log(chalk.white(`/____|____\\'    ${locUnits[2][1]['name']}${locUnits[2][0]['name']}   .'        |`));
-   // console.log(chalk.white(`|         |     ${locUnits[3][1]['name']}${locUnits[3][0]['name']} .' ㅡ\\     .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _`));
-   // console.log(chalk.white(`|    _    |    ${locUnits[4][1]['name']}${locUnits[4][0]['name']}.'  /+++|  .'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|   |#|   |${locUnits[5][1]['name']}${locUnits[5][0]['name']}  .'   ㅣ+++|.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|  =====  |.'     ㅣ++.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |       ㅣ.'🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |      .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉`));
-   // console.log(chalk.white(`|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __`));
-   // console.log(chalk.white(`|_________|.'                                                         \n`));
+   // console.log(chalk.white("   / ^\\         | |###| |.'  |"));
+   // console.log(chalk.white(`  /  | \\     .\'        .\'    |`));
+   // console.log(chalk.white(` /   |  \\  .\'        .\'      |`));
+   // console.log(chalk.white("/____|___\\'        .'        |"));
+   // console.log(chalk.white("|         |      .' ㅡ\\     .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"));
+   // console.log(chalk.white("|    _    |    .'  /+++|  .'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|   |#|   |  .'   ㅣ+++|.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|  =====  |.'     ㅣ++.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |       ㅣ.'🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |      .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
+   // console.log(chalk.white("|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __"));
+   // console.log(chalk.white("|_________|.'                                                         \n"));
+   // console.log(line);
+   // console.log(``);
+   // console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(7) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(5) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+
+   // console.log(` O /`);
+   // console.log(`<|\\|`);
+   // console.log(`/ \\|)`);
+
+   // console.log(``);
+   // console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(` O / ` + ' '.repeat(2) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(`<|\\| `);
+   // console.log(`/ \\| ` + ' '.repeat(0) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+   // console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   // console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   // console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   // console.log(``);
+
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   // console.log(` O ) ` + ' '.repeat(3) + `┃ O__`);
+   // console.log(`<|[-]=> ` + ' '.repeat(0) + `╋/|)_)`);
+   // console.log(`/ \\) ` + ' '.repeat(3) + ` / \\`);
+   // console.log(``);
+   //
 
    //---------------------------       버퍼                       원거리                        근접
-   console.log(
-      chalk.white(
-         `| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['name']} | ${locMonsters[0][1]['name']} | ${locMonsters[0][2]['name']} | ${locMonsters[0][3]['name']} | ${locMonsters[0][4]['name']} | ${locMonsters[0][5]['name']} | ${locMonsters[0][6]['name']} |`,
-      ),
-   );
+   console.log(chalk.white(`| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['name']} | ${locMonsters[0][1]['name']} | ${locMonsters[0][2]['name']} | ${locMonsters[0][3]['name']} | ${locMonsters[0][4]['name']} | ${locMonsters[0][5]['name']} | ${locMonsters[0][6]['name']} |`));
 
-   console.log(
-      chalk.white(
-         `| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['name']} | ${locMonsters[1][1]['name']} | ${locMonsters[1][2]['name']} | ${locMonsters[1][3]['name']} | ${locMonsters[1][4]['name']} | ${locMonsters[1][5]['name']} | ${locMonsters[1][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['name']} | ${locMonsters[2][1]['name']} | ${locMonsters[2][2]['name']} | ${locMonsters[2][3]['name']} | ${locMonsters[2][4]['name']} | ${locMonsters[2][5]['name']} | ${locMonsters[2][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['name']} | ${locMonsters[3][1]['name']} | ${locMonsters[3][2]['name']} | ${locMonsters[3][3]['name']} | ${locMonsters[3][4]['name']} | ${locMonsters[3][5]['name']} | ${locMonsters[3][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['name']} | ${locMonsters[4][1]['name']} | ${locMonsters[4][2]['name']} | ${locMonsters[4][3]['name']} | ${locMonsters[4][4]['name']} | ${locMonsters[4][5]['name']} | ${locMonsters[4][6]['name']} |`,
-      ),
-   );
-   console.log(
-      chalk.white(
-         `| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['name']} | ${locMonsters[5][1]['name']} | ${locMonsters[5][2]['name']} | ${locMonsters[5][3]['name']} | ${locMonsters[5][4]['name']} | ${locMonsters[5][5]['name']} | ${locMonsters[5][6]['name']} |`,
-      ),
-   );
-   console.log(line);
+   console.log(chalk.white(`| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['name']} | ${locMonsters[1][1]['name']} | ${locMonsters[1][2]['name']} | ${locMonsters[1][3]['name']} | ${locMonsters[1][4]['name']} | ${locMonsters[1][5]['name']} | ${locMonsters[1][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['name']} | ${locMonsters[2][1]['name']} | ${locMonsters[2][2]['name']} | ${locMonsters[2][3]['name']} | ${locMonsters[2][4]['name']} | ${locMonsters[2][5]['name']} | ${locMonsters[2][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['name']} | ${locMonsters[3][1]['name']} | ${locMonsters[3][2]['name']} | ${locMonsters[3][3]['name']} | ${locMonsters[3][4]['name']} | ${locMonsters[3][5]['name']} | ${locMonsters[3][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['name']} | ${locMonsters[4][1]['name']} | ${locMonsters[4][2]['name']} | ${locMonsters[4][3]['name']} | ${locMonsters[4][4]['name']} | ${locMonsters[4][5]['name']} | ${locMonsters[4][6]['name']} |`));
+   console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['name']} | ${locMonsters[5][1]['name']} | ${locMonsters[5][2]['name']} | ${locMonsters[5][3]['name']} | ${locMonsters[5][4]['name']} | ${locMonsters[5][5]['name']} | ${locMonsters[5][6]['name']} |`));
+   console.log(`┌` + '─'.repeat(118) + `┐`);
 }
 
 const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) => {
@@ -146,11 +251,12 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
       console.clear();
 
       //상단 Display출력
-      displayStatus(stage, wave, turn, castle, locUnits, monsters);
+      displayStatus(stage, wave, turn, castle, unitStr, locUnits, monsters);
       displayMap(locUnits, locMonsters);
 
       //Logs 출력
       logs.forEach((log) => console.log(log));
+      console.log(`└` + '─'.repeat(118) + `┘`);
 
       //기본 선택문
       console.log(chalk.green(`\n1. ${choiseStr[0]} 2. ${choiseStr[1]} 3. ${choiseStr[2]} 4. ${choiseStr[3]}`));
@@ -313,12 +419,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                         }
                      }
 
-                     if (
-                        (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) ||
-                        (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) ||
-                        (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) ||
-                        (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1)
-                     ) {
+                     if ((unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) || (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) || (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) || (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1)) {
                         //등급별 조합 가능 여부
                         let isGrade1 = (unitGrade1MCnt >= 1 && unitGrade1RCnt >= 2) || (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 1) ? true : false;
                         let isGrade2 = (unitGrade2MCnt >= 1 && unitGrade2RCnt >= 2) || (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 1) ? true : false;
@@ -366,9 +467,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                               isSuccess = true;
                            } else {
                               //실패
-                              unitType === 1
-                                 ? (locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][unitType - 1] = false)
-                                 : (locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][unitType - 1] = false);
+                              unitType === 1 ? (locUnits[unitGrade1MArr[unitGrade1MArr.length - 1]][unitType - 1] = false) : (locUnits[unitGrade1RArr[unitGrade1RArr.length - 1]][unitType - 1] = false);
                               logsPush(logs, chalk.red(`[조합 실패] ${unitStr[unitType - 1]} 유닛이 소모되었습니다.`));
                               break;
                            }
@@ -415,9 +514,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                               isSuccess = true;
                            } else {
                               //실패
-                              unitType === 1
-                                 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false)
-                                 : (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false);
+                              unitType === 1 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false) : (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false);
                               logsPush(logs, chalk.red(`[조합 실패] 중급 ${unitStr[unitType - 1]} 유닛이 소모되었습니다.`));
                               break;
                            }
