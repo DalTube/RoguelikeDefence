@@ -9,24 +9,7 @@ import * as GameSystem from './constants/settings.js';
 import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
 
-function byteCount(str) {
-   let count = 0;
-   for (let i = 0; i < str.length; i++) {
-      let charCode = str.charCodeAt(i);
-      if (charCode <= 0x7f) {
-         count += 1;
-      } else if (charCode <= 0x7ff) {
-         count += 2;
-      } else if (charCode <= 0xffff) {
-         count += 3;
-      } else {
-         count += 4;
-      }
-   }
-   return count;
-}
-
-function displayStatus(stage, wave, turn, castle, unitStr, locUnits, locMonsters) {
+function displayStatus(stage, wave, turn, castle, unitStr, locUnits, displayMonsters) {
    let maxCol = 120;
    let statusText = `│ 난이도: 보통 | 스테이지: ${stage} | 웨이브: ${wave} | 다음 웨이브: ${turn}턴 | 성 체력: ${castle.hp}/${Settings.maxCastleHp}`;
    let blank = maxCol - statusText.length - 22; //왜 22를 빼야할까? byte 연관인 것 같은데...
@@ -38,58 +21,249 @@ function displayStatus(stage, wave, turn, castle, unitStr, locUnits, locMonsters
    console.log(`┌─ ` + ` 유닛 정보 ` + '─'.repeat(45) + `┐` + `┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
    console.log(`│` + ' '.repeat(58) + `│` + `│` + ' '.repeat(58) + `│`);
    console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│` + `│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
-   console.log(`│` + ' '.repeat(4) + `${locUnits[0][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[0][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[0][0] ? unitGradeStart[locUnits[0][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[0][0] ? (locUnits[0][0]['damage'].toString().length === 1 ? ' ' + locUnits[0][0]['damage'] : locUnits[0][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[0][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[0][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[0][1] ? unitGradeStart[locUnits[0][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[0][1] ? (locUnits[0][1]['damage'].toString().length === 1 ? ' ' + locUnits[0][1]['damage'] : locUnits[0][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
-   console.log(`│` + ' '.repeat(4) + `${locUnits[1][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[1][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[1][0] ? unitGradeStart[locUnits[1][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[1][0] ? (locUnits[1][0]['damage'].toString().length === 1 ? ' ' + locUnits[1][0]['damage'] : locUnits[1][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[1][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[1][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[1][1] ? unitGradeStart[locUnits[1][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[1][1] ? (locUnits[1][1]['damage'].toString().length === 1 ? ' ' + locUnits[1][1]['damage'] : locUnits[1][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   console.log(`│` + ' '.repeat(4) + `${locUnits[2][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[2][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[2][0] ? unitGradeStart[locUnits[2][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[2][0] ? (locUnits[2][0]['damage'].toString().length === 1 ? ' ' + locUnits[2][0]['damage'] : locUnits[2][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[2][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[2][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[2][1] ? unitGradeStart[locUnits[2][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[2][1] ? (locUnits[2][1]['damage'].toString().length === 1 ? ' ' + locUnits[2][1]['damage'] : locUnits[2][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   console.log(`│` + ' '.repeat(4) + `${locUnits[3][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[3][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[3][0] ? unitGradeStart[locUnits[3][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[3][0] ? (locUnits[3][0]['damage'].toString().length === 1 ? ' ' + locUnits[3][0]['damage'] : locUnits[3][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[3][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[3][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[3][1] ? unitGradeStart[locUnits[3][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[3][1] ? (locUnits[3][1]['damage'].toString().length === 1 ? ' ' + locUnits[3][1]['damage'] : locUnits[3][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   console.log(`│` + ' '.repeat(4) + `${locUnits[4][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[4][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[4][0] ? unitGradeStart[locUnits[4][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[4][0] ? (locUnits[4][0]['damage'].toString().length === 1 ? ' ' + locUnits[4][0]['damage'] : locUnits[4][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[4][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[4][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[4][1] ? unitGradeStart[locUnits[4][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[4][1] ? (locUnits[4][1]['damage'].toString().length === 1 ? ' ' + locUnits[4][1]['damage'] : locUnits[4][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   console.log(`│` + ' '.repeat(4) + `${locUnits[5][0] ? 1 : ' '}` + ' '.repeat(3) + `${locUnits[5][0] ? unitStr[0] : '    '}` + ' '.repeat(2) + `${locUnits[5][0] ? unitGradeStart[locUnits[5][0]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[5][0] ? (locUnits[5][0]['damage'].toString().length === 1 ? ' ' + locUnits[5][0]['damage'] : locUnits[5][0]['damage']) : '  '}` + ' '.repeat(9) + `${locUnits[5][1] ? 1 : ' '}` + ' '.repeat(2) + `${locUnits[5][1] ? unitStr[1] : '      '}` + ' '.repeat(1) + `${locUnits[5][1] ? unitGradeStart[locUnits[5][1]['grade'] - 1] : '      '}` + ' '.repeat(3) + `${locUnits[5][1] ? (locUnits[5][1]['damage'].toString().length === 1 ? ' ' + locUnits[5][1]['damage'] : locUnits[5][1]['damage']) : '  '}` + ' '.repeat(3) + `│` + `│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
+
+   console.log(
+      `│` +
+         ' '.repeat(4) +
+         `${locUnits[0][0] ? 1 : ' '}` +
+         ' '.repeat(3) +
+         `${locUnits[0][0] ? unitStr[0] : '    '}` +
+         ' '.repeat(2) +
+         `${locUnits[0][0] ? unitGradeStart[locUnits[0][0]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[0][0] ? (locUnits[0][0]['damage'].toString().length === 1 ? ' ' + locUnits[0][0]['damage'] : locUnits[0][0]['damage']) : '  '}` +
+         ' '.repeat(9) +
+         `${locUnits[0][1] ? 1 : ' '}` +
+         ' '.repeat(2) +
+         `${locUnits[0][1] ? unitStr[1] : '      '}` +
+         ' '.repeat(1) +
+         `${locUnits[0][1] ? unitGradeStart[locUnits[0][1]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[0][1] ? (locUnits[0][1]['damage'].toString().length === 1 ? ' ' + locUnits[0][1]['damage'] : locUnits[0][1]['damage']) : '  '}` +
+         ' '.repeat(3) +
+         `│` +
+         `│` +
+         ' '.repeat(4) +
+         `${displayMonsters[0] ? 'A' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[0] ? (displayMonsters[0]['name'].toString().length === 1 ? '  ' + displayMonsters[0]['name'] + '  ' : displayMonsters[0]['name'].toString().length === 2 ? '  ' + displayMonsters[0]['name'] : displayMonsters[0]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[0] ? (displayMonsters[0]['hp'].toString().length === 1 ? '  ' + displayMonsters[0]['hp'] : displayMonsters[0]['hp'].toString().length === 2 ? ' ' + displayMonsters[0]['hp'] : displayMonsters[0]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[0] ? (displayMonsters[0]['damage'].toString().length === 1 ? '  ' + displayMonsters[0]['damage'] : displayMonsters[0]['damage'].toString().length === 2 ? ' ' + displayMonsters[0]['damage'] : displayMonsters[0]['damage']) : '   '}` +
+         ' '.repeat(9) +
+         `${displayMonsters[1] ? 'B' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[1] ? (displayMonsters[1]['name'].toString().length === 1 ? '  ' + displayMonsters[1]['name'] + '  ' : displayMonsters[1]['name'].toString().length === 2 ? '  ' + displayMonsters[1]['name'] : displayMonsters[1]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[1] ? (displayMonsters[1]['hp'].toString().length === 1 ? '  ' + displayMonsters[1]['hp'] : displayMonsters[1]['hp'].toString().length === 2 ? ' ' + displayMonsters[1]['hp'] : displayMonsters[1]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[1] ? (displayMonsters[1]['damage'].toString().length === 1 ? '  ' + displayMonsters[1]['damage'] : displayMonsters[1]['damage'].toString().length === 2 ? ' ' + displayMonsters[1]['damage'] : displayMonsters[1]['damage']) : '   '}` +
+         ' '.repeat(3) +
+         `│`,
+   );
+   console.log(
+      `│` +
+         ' '.repeat(4) +
+         `${locUnits[1][0] ? 2 : ' '}` +
+         ' '.repeat(3) +
+         `${locUnits[1][0] ? unitStr[0] : '    '}` +
+         ' '.repeat(2) +
+         `${locUnits[1][0] ? unitGradeStart[locUnits[1][0]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[1][0] ? (locUnits[1][0]['damage'].toString().length === 1 ? ' ' + locUnits[1][0]['damage'] : locUnits[1][0]['damage']) : '  '}` +
+         ' '.repeat(9) +
+         `${locUnits[1][1] ? 2 : ' '}` +
+         ' '.repeat(2) +
+         `${locUnits[1][1] ? unitStr[1] : '      '}` +
+         ' '.repeat(1) +
+         `${locUnits[1][1] ? unitGradeStart[locUnits[1][1]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[1][1] ? (locUnits[1][1]['damage'].toString().length === 1 ? ' ' + locUnits[1][1]['damage'] : locUnits[1][1]['damage']) : '  '}` +
+         ' '.repeat(3) +
+         `│` +
+         `│` +
+         ' '.repeat(4) +
+         `${displayMonsters[2] ? 'C' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[2] ? (displayMonsters[2]['name'].toString().length === 1 ? '  ' + displayMonsters[2]['name'] + '  ' : displayMonsters[2]['name'].toString().length === 2 ? '  ' + displayMonsters[2]['name'] : displayMonsters[2]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[2] ? (displayMonsters[2]['hp'].toString().length === 1 ? '  ' + displayMonsters[2]['hp'] : displayMonsters[2]['hp'].toString().length === 2 ? ' ' + displayMonsters[2]['hp'] : displayMonsters[2]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[2] ? (displayMonsters[2]['damage'].toString().length === 1 ? '  ' + displayMonsters[2]['damage'] : displayMonsters[2]['damage'].toString().length === 2 ? ' ' + displayMonsters[2]['damage'] : displayMonsters[2]['damage']) : '   '}` +
+         ' '.repeat(9) +
+         `${displayMonsters[3] ? 'D' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[3] ? (displayMonsters[3]['name'].toString().length === 1 ? '  ' + displayMonsters[3]['name'] + '  ' : displayMonsters[3]['name'].toString().length === 2 ? '  ' + displayMonsters[3]['name'] : displayMonsters[3]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[3] ? (displayMonsters[3]['hp'].toString().length === 1 ? '  ' + displayMonsters[3]['hp'] : displayMonsters[3]['hp'].toString().length === 2 ? ' ' + displayMonsters[3]['hp'] : displayMonsters[3]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[3] ? (displayMonsters[3]['damage'].toString().length === 1 ? '  ' + displayMonsters[3]['damage'] : displayMonsters[3]['damage'].toString().length === 2 ? ' ' + displayMonsters[3]['damage'] : displayMonsters[3]['damage']) : '   '}` +
+         ' '.repeat(3) +
+         `│`,
+   );
+   console.log(
+      `│` +
+         ' '.repeat(4) +
+         `${locUnits[2][0] ? 3 : ' '}` +
+         ' '.repeat(3) +
+         `${locUnits[2][0] ? unitStr[0] : '    '}` +
+         ' '.repeat(2) +
+         `${locUnits[2][0] ? unitGradeStart[locUnits[2][0]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[2][0] ? (locUnits[2][0]['damage'].toString().length === 1 ? ' ' + locUnits[2][0]['damage'] : locUnits[2][0]['damage']) : '  '}` +
+         ' '.repeat(9) +
+         `${locUnits[2][1] ? 3 : ' '}` +
+         ' '.repeat(2) +
+         `${locUnits[2][1] ? unitStr[1] : '      '}` +
+         ' '.repeat(1) +
+         `${locUnits[2][1] ? unitGradeStart[locUnits[2][1]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[2][1] ? (locUnits[2][1]['damage'].toString().length === 1 ? ' ' + locUnits[2][1]['damage'] : locUnits[2][1]['damage']) : '  '}` +
+         ' '.repeat(3) +
+         `│` +
+         `│` +
+         ' '.repeat(4) +
+         `${displayMonsters[4] ? 'E' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[4] ? (displayMonsters[4]['name'].toString().length === 1 ? '  ' + displayMonsters[4]['name'] + '  ' : displayMonsters[4]['name'].toString().length === 2 ? '  ' + displayMonsters[4]['name'] : displayMonsters[4]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[4] ? (displayMonsters[4]['hp'].toString().length === 1 ? '  ' + displayMonsters[4]['hp'] : displayMonsters[4]['hp'].toString().length === 2 ? ' ' + displayMonsters[4]['hp'] : displayMonsters[4]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[4] ? (displayMonsters[4]['damage'].toString().length === 1 ? '  ' + displayMonsters[4]['damage'] : displayMonsters[4]['damage'].toString().length === 2 ? ' ' + displayMonsters[4]['damage'] : displayMonsters[4]['damage']) : '   '}` +
+         ' '.repeat(9) +
+         `${displayMonsters[5] ? 'F' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[5] ? (displayMonsters[5]['name'].toString().length === 1 ? '  ' + displayMonsters[5]['name'] + '  ' : displayMonsters[5]['name'].toString().length === 2 ? '  ' + displayMonsters[5]['name'] : displayMonsters[5]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[5] ? (displayMonsters[5]['hp'].toString().length === 1 ? '  ' + displayMonsters[5]['hp'] : displayMonsters[5]['hp'].toString().length === 2 ? ' ' + displayMonsters[5]['hp'] : displayMonsters[5]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[5] ? (displayMonsters[5]['damage'].toString().length === 1 ? '  ' + displayMonsters[5]['damage'] : displayMonsters[5]['damage'].toString().length === 2 ? ' ' + displayMonsters[5]['damage'] : displayMonsters[5]['damage']) : '   '}` +
+         ' '.repeat(3) +
+         `│`,
+   );
+   console.log(
+      `│` +
+         ' '.repeat(4) +
+         `${locUnits[3][0] ? 4 : ' '}` +
+         ' '.repeat(3) +
+         `${locUnits[3][0] ? unitStr[0] : '    '}` +
+         ' '.repeat(2) +
+         `${locUnits[3][0] ? unitGradeStart[locUnits[3][0]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[3][0] ? (locUnits[3][0]['damage'].toString().length === 1 ? ' ' + locUnits[3][0]['damage'] : locUnits[3][0]['damage']) : '  '}` +
+         ' '.repeat(9) +
+         `${locUnits[3][1] ? 4 : ' '}` +
+         ' '.repeat(2) +
+         `${locUnits[3][1] ? unitStr[1] : '      '}` +
+         ' '.repeat(1) +
+         `${locUnits[3][1] ? unitGradeStart[locUnits[3][1]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[3][1] ? (locUnits[3][1]['damage'].toString().length === 1 ? ' ' + locUnits[3][1]['damage'] : locUnits[3][1]['damage']) : '  '}` +
+         ' '.repeat(3) +
+         `│` +
+         `│` +
+         ' '.repeat(4) +
+         `${displayMonsters[6] ? 'G' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[6] ? (displayMonsters[6]['name'].toString().length === 1 ? '  ' + displayMonsters[6]['name'] + '  ' : displayMonsters[6]['name'].toString().length === 2 ? '  ' + displayMonsters[6]['name'] : displayMonsters[6]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[6] ? (displayMonsters[6]['hp'].toString().length === 1 ? '  ' + displayMonsters[6]['hp'] : displayMonsters[6]['hp'].toString().length === 2 ? ' ' + displayMonsters[6]['hp'] : displayMonsters[6]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[6] ? (displayMonsters[6]['damage'].toString().length === 1 ? '  ' + displayMonsters[6]['damage'] : displayMonsters[6]['damage'].toString().length === 2 ? ' ' + displayMonsters[6]['damage'] : displayMonsters[6]['damage']) : '   '}` +
+         ' '.repeat(9) +
+         `${displayMonsters[7] ? 'H' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[7] ? (displayMonsters[7]['name'].toString().length === 1 ? '  ' + displayMonsters[7]['name'] + '  ' : displayMonsters[7]['name'].toString().length === 2 ? '  ' + displayMonsters[7]['name'] : displayMonsters[7]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[7] ? (displayMonsters[7]['hp'].toString().length === 1 ? '  ' + displayMonsters[7]['hp'] : displayMonsters[7]['hp'].toString().length === 2 ? ' ' + displayMonsters[7]['hp'] : displayMonsters[7]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[7] ? (displayMonsters[7]['damage'].toString().length === 1 ? '  ' + displayMonsters[7]['damage'] : displayMonsters[7]['damage'].toString().length === 2 ? ' ' + displayMonsters[7]['damage'] : displayMonsters[7]['damage']) : '   '}` +
+         ' '.repeat(3) +
+         `│`,
+   );
+   console.log(
+      `│` +
+         ' '.repeat(4) +
+         `${locUnits[4][0] ? 5 : ' '}` +
+         ' '.repeat(3) +
+         `${locUnits[4][0] ? unitStr[0] : '    '}` +
+         ' '.repeat(2) +
+         `${locUnits[4][0] ? unitGradeStart[locUnits[4][0]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[4][0] ? (locUnits[4][0]['damage'].toString().length === 1 ? ' ' + locUnits[4][0]['damage'] : locUnits[4][0]['damage']) : '  '}` +
+         ' '.repeat(9) +
+         `${locUnits[4][1] ? 5 : ' '}` +
+         ' '.repeat(2) +
+         `${locUnits[4][1] ? unitStr[1] : '      '}` +
+         ' '.repeat(1) +
+         `${locUnits[4][1] ? unitGradeStart[locUnits[4][1]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[4][1] ? (locUnits[4][1]['damage'].toString().length === 1 ? ' ' + locUnits[4][1]['damage'] : locUnits[4][1]['damage']) : '  '}` +
+         ' '.repeat(3) +
+         `│` +
+         `│` +
+         ' '.repeat(4) +
+         `${displayMonsters[8] ? 'I' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[8] ? (displayMonsters[8]['name'].toString().length === 1 ? '  ' + displayMonsters[8]['name'] + '  ' : displayMonsters[8]['name'].toString().length === 2 ? '  ' + displayMonsters[8]['name'] : displayMonsters[8]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[8] ? (displayMonsters[8]['hp'].toString().length === 1 ? '  ' + displayMonsters[8]['hp'] : displayMonsters[8]['hp'].toString().length === 2 ? ' ' + displayMonsters[8]['hp'] : displayMonsters[8]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[8] ? (displayMonsters[8]['damage'].toString().length === 1 ? '  ' + displayMonsters[8]['damage'] : displayMonsters[8]['damage'].toString().length === 2 ? ' ' + displayMonsters[8]['damage'] : displayMonsters[8]['damage']) : '   '}` +
+         ' '.repeat(9) +
+         `${displayMonsters[9] ? 'J' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[9] ? (displayMonsters[9]['name'].toString().length === 1 ? '  ' + displayMonsters[9]['name'] + '  ' : displayMonsters[9]['name'].toString().length === 2 ? '  ' + displayMonsters[9]['name'] : displayMonsters[9]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[9] ? (displayMonsters[9]['hp'].toString().length === 1 ? '  ' + displayMonsters[9]['hp'] : displayMonsters[9]['hp'].toString().length === 2 ? ' ' + displayMonsters[9]['hp'] : displayMonsters[9]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[9] ? (displayMonsters[9]['damage'].toString().length === 1 ? '  ' + displayMonsters[9]['damage'] : displayMonsters[9]['damage'].toString().length === 2 ? ' ' + displayMonsters[9]['damage'] : displayMonsters[9]['damage']) : '   '}` +
+         ' '.repeat(3) +
+         `│`,
+   );
+   console.log(
+      `│` +
+         ' '.repeat(4) +
+         `${locUnits[5][0] ? 6 : ' '}` +
+         ' '.repeat(3) +
+         `${locUnits[5][0] ? unitStr[0] : '    '}` +
+         ' '.repeat(2) +
+         `${locUnits[5][0] ? unitGradeStart[locUnits[5][0]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[5][0] ? (locUnits[5][0]['damage'].toString().length === 1 ? ' ' + locUnits[5][0]['damage'] : locUnits[5][0]['damage']) : '  '}` +
+         ' '.repeat(9) +
+         `${locUnits[5][1] ? 6 : ' '}` +
+         ' '.repeat(2) +
+         `${locUnits[5][1] ? unitStr[1] : '      '}` +
+         ' '.repeat(1) +
+         `${locUnits[5][1] ? unitGradeStart[locUnits[5][1]['grade'] - 1] : '      '}` +
+         ' '.repeat(3) +
+         `${locUnits[5][1] ? (locUnits[5][1]['damage'].toString().length === 1 ? ' ' + locUnits[5][1]['damage'] : locUnits[5][1]['damage']) : '  '}` +
+         ' '.repeat(3) +
+         `│` +
+         `│` +
+         ' '.repeat(4) +
+         `${displayMonsters[10] ? 'I' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[10] ? (displayMonsters[10]['name'].toString().length === 1 ? '  ' + displayMonsters[10]['name'] + '  ' : displayMonsters[10]['name'].toString().length === 2 ? '  ' + displayMonsters[10]['name'] : displayMonsters[10]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[10] ? (displayMonsters[10]['hp'].toString().length === 1 ? '  ' + displayMonsters[10]['hp'] : displayMonsters[10]['hp'].toString().length === 2 ? ' ' + displayMonsters[10]['hp'] : displayMonsters[10]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[10] ? (displayMonsters[10]['damage'].toString().length === 1 ? '  ' + displayMonsters[10]['damage'] : displayMonsters[10]['damage'].toString().length === 2 ? ' ' + displayMonsters[10]['damage'] : displayMonsters[10]['damage']) : '   '}` +
+         ' '.repeat(9) +
+         `${displayMonsters[11] ? 'J' : ' '}` +
+         ' '.repeat(2) +
+         `${displayMonsters[11] ? (displayMonsters[11]['name'].toString().length === 1 ? '  ' + displayMonsters[11]['name'] + '  ' : displayMonsters[11]['name'].toString().length === 2 ? '  ' + displayMonsters[11]['name'] : displayMonsters[11]['name']) : '      '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[11] ? (displayMonsters[11]['hp'].toString().length === 1 ? '  ' + displayMonsters[11]['hp'] : displayMonsters[11]['hp'].toString().length === 2 ? ' ' + displayMonsters[11]['hp'] : displayMonsters[11]['hp']) : '   '}` +
+         ' '.repeat(3) +
+         `${displayMonsters[11] ? (displayMonsters[11]['damage'].toString().length === 1 ? '  ' + displayMonsters[11]['damage'] : displayMonsters[11]['damage'].toString().length === 2 ? ' ' + displayMonsters[11]['damage'] : displayMonsters[11]['damage']) : '   '}` +
+         ' '.repeat(3) +
+         `│`,
+   );
    // console.log(`│` + ' '.repeat(58) + `│` + `│` + ' '.repeat(58) + `│`);
    console.log(`└` + '─'.repeat(58) + `┘` + `└` + '─'.repeat(58) + `┘`);
-
-   // console.log(`┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
-   // console.log(`│` + ' '.repeat(58) + `│`);
-   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(58) + `│`);
-   // console.log(`└` + '─'.repeat(58) + `┘`);
-
-   // console.log(`┌─ ` + ` 유닛 정보 ` + '─'.repeat(45) + `┐`);
-   // console.log(`│` + ' '.repeat(58) + `│`);
-   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `종류` + ' '.repeat(3) + `등급` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `1` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆    ` + ' '.repeat(3) + ` 2` + ' '.repeat(9) + `1` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆    ` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `2` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(9) + `2` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `3` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆☆` + ' '.repeat(3) + `10` + ' '.repeat(9) + `3` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆☆` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `4` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆    ` + ' '.repeat(3) + ` 2` + ' '.repeat(9) + `4` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆    ` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `5` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(9) + `5` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆  ` + ' '.repeat(3) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `6` + ' '.repeat(3) + `근접` + ' '.repeat(2) + `☆☆☆` + ' '.repeat(3) + `10` + ' '.repeat(9) + `6` + ' '.repeat(2) + `원거리` + ' '.repeat(1) + `☆☆☆` + ' '.repeat(3) + ` 1` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(58) + `│`);
-   // console.log(`└` + '─'.repeat(58) + `┘`);
-
-   // console.log(`┌─ ` + ` 몬스터 정보 ` + '─'.repeat(43) + `┐`);
-   // console.log(`│` + ' '.repeat(58) + `│`);
-   // console.log(`│` + ' '.repeat(2) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(5) + `번호` + ' '.repeat(2) + `이름` + ' '.repeat(3) + `체력` + ' '.repeat(2) + `공격력` + ' '.repeat(1) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `A` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + ` 2` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `B` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + `10` + ' '.repeat(9) + `C` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `100` + ' '.repeat(4) + ` 2` + ' '.repeat(9) + `D` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(9) + `E` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(4) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + `  1` + ' '.repeat(4) + `10` + ' '.repeat(9) + `F` + ' '.repeat(2) + `몬스터` + ' '.repeat(3) + ` 10` + ' '.repeat(4) + `10` + ' '.repeat(3) + `│`);
-   // console.log(`│` + ' '.repeat(58) + `│`);
-   // console.log(`└` + '─'.repeat(58) + `┘`);
-
-   // console.log(`┌─────────────┐`);
-   // console.log(`│ ┌─────────┐ │`);
-   // console.log(`│ │         │ │`);
-   // console.log(`│ │         │ │`);
-   // console.log(`│ │         │ │`);
-   // console.log(`│ └─────────┘ │`);
-   // console.log(`└─────────────┘`);
 
    // console.log(chalk.white(`─ │ ┌ ┐ ┘ └ ├ ┬ ┤ ┴ ┼ ━ ┃ ┏ ┓ ┛ ┗ ┣ ┳ ┫ ┻ ╋ ┠ ┯ ┨ ┷ ┿ ┝ ┰ ┥ ┸ ╂ ┒ ┑ ┚ ┙ ┖ ┕ ┎ ┍ ┞ ┟ ┡ ┢ ┦ ┧ ┩ ┪ ┭ ┮ ┱ ┲ ┵ ┶ ┹ ┺ ┽ ┾ ╀ ╁ ╃ ╄ ╅ ╆ ╇ ╈ ╉ ╊`));
 }
@@ -149,30 +323,30 @@ function displayMap(locUnits, locMonsters) {
    // console.log(`<|\\|`);
    // console.log(`/ \\|)`);
 
+   console.log(``);
+   console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
    // console.log(``);
-   // console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   // console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   // console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
    // console.log(``);
-   // console.log(' '.repeat(9) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   // console.log(' '.repeat(9) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   // console.log(' '.repeat(9) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   console.log(` O / ` + ' '.repeat(2) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(`<|\\| `);
+   console.log(`/ \\| ` + ' '.repeat(0) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
    // console.log(``);
-   // console.log(' '.repeat(7) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   // console.log(' '.repeat(7) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   // console.log(` O / ` + ' '.repeat(2) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
-   // console.log(`<|\\| `);
-   // console.log(`/ \\| ` + ' '.repeat(0) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   // console.log(' '.repeat(5) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   // console.log(' '.repeat(5) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
    // console.log(``);
-   // console.log(' '.repeat(3) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   // console.log(' '.repeat(3) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   // console.log(' '.repeat(3) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
-   // console.log(``);
-   // console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
-   // console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
-   // console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
+   console.log(' '.repeat(1) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
+   console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
+   console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
    // console.log(``);
 
    // console.log(``);
@@ -203,13 +377,22 @@ function displayMap(locUnits, locMonsters) {
    //
 
    //---------------------------       버퍼                       원거리                        근접
-   console.log(chalk.white(`| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['name']} | ${locMonsters[0][1]['name']} | ${locMonsters[0][2]['name']} | ${locMonsters[0][3]['name']} | ${locMonsters[0][4]['name']} | ${locMonsters[0][5]['name']} | ${locMonsters[0][6]['name']} |`));
+   // console.log(chalk.white(`| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['name']} | ${locMonsters[0][1]['name']} | ${locMonsters[0][2]['name']} | ${locMonsters[0][3]['name']} | ${locMonsters[0][4]['name']} | ${locMonsters[0][5]['name']} | ${locMonsters[0][6]['name']} |`));
 
-   console.log(chalk.white(`| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['name']} | ${locMonsters[1][1]['name']} | ${locMonsters[1][2]['name']} | ${locMonsters[1][3]['name']} | ${locMonsters[1][4]['name']} | ${locMonsters[1][5]['name']} | ${locMonsters[1][6]['name']} |`));
-   console.log(chalk.white(`| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['name']} | ${locMonsters[2][1]['name']} | ${locMonsters[2][2]['name']} | ${locMonsters[2][3]['name']} | ${locMonsters[2][4]['name']} | ${locMonsters[2][5]['name']} | ${locMonsters[2][6]['name']} |`));
-   console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['name']} | ${locMonsters[3][1]['name']} | ${locMonsters[3][2]['name']} | ${locMonsters[3][3]['name']} | ${locMonsters[3][4]['name']} | ${locMonsters[3][5]['name']} | ${locMonsters[3][6]['name']} |`));
-   console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['name']} | ${locMonsters[4][1]['name']} | ${locMonsters[4][2]['name']} | ${locMonsters[4][3]['name']} | ${locMonsters[4][4]['name']} | ${locMonsters[4][5]['name']} | ${locMonsters[4][6]['name']} |`));
-   console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['name']} | ${locMonsters[5][1]['name']} | ${locMonsters[5][2]['name']} | ${locMonsters[5][3]['name']} | ${locMonsters[5][4]['name']} | ${locMonsters[5][5]['name']} | ${locMonsters[5][6]['name']} |`));
+   // console.log(chalk.white(`| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['name']} | ${locMonsters[1][1]['name']} | ${locMonsters[1][2]['name']} | ${locMonsters[1][3]['name']} | ${locMonsters[1][4]['name']} | ${locMonsters[1][5]['name']} | ${locMonsters[1][6]['name']} |`));
+   // console.log(chalk.white(`| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['name']} | ${locMonsters[2][1]['name']} | ${locMonsters[2][2]['name']} | ${locMonsters[2][3]['name']} | ${locMonsters[2][4]['name']} | ${locMonsters[2][5]['name']} | ${locMonsters[2][6]['name']} |`));
+   // console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['name']} | ${locMonsters[3][1]['name']} | ${locMonsters[3][2]['name']} | ${locMonsters[3][3]['name']} | ${locMonsters[3][4]['name']} | ${locMonsters[3][5]['name']} | ${locMonsters[3][6]['name']} |`));
+   // console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['name']} | ${locMonsters[4][1]['name']} | ${locMonsters[4][2]['name']} | ${locMonsters[4][3]['name']} | ${locMonsters[4][4]['name']} | ${locMonsters[4][5]['name']} | ${locMonsters[4][6]['name']} |`));
+   // console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['name']} | ${locMonsters[5][1]['name']} | ${locMonsters[5][2]['name']} | ${locMonsters[5][3]['name']} | ${locMonsters[5][4]['name']} | ${locMonsters[5][5]['name']} | ${locMonsters[5][6]['name']} |`));
+
+   // console.log('');
+   // console.log(chalk.white(`| ${locUnits[0][2]['name']} | ${locUnits[0][1]['name']} | ${locUnits[0][0]['name']} | || | ${locMonsters[0][0]['hp']} | ${locMonsters[0][1]['hp']} | ${locMonsters[0][2]['hp']} | ${locMonsters[0][3]['hp']} | ${locMonsters[0][4]['hp']} | ${locMonsters[0][5]['hp']} | ${locMonsters[0][6]['hp']} |`));
+
+   // console.log(chalk.white(`| ${locUnits[1][2]['name']} | ${locUnits[1][1]['name']} | ${locUnits[1][0]['name']} | || | ${locMonsters[1][0]['hp']} | ${locMonsters[1][1]['hp']} | ${locMonsters[1][2]['hp']} | ${locMonsters[1][3]['hp']} | ${locMonsters[1][4]['hp']} | ${locMonsters[1][5]['hp']} | ${locMonsters[1][6]['hp']} |`));
+   // console.log(chalk.white(`| ${locUnits[2][2]['name']} | ${locUnits[2][1]['name']} | ${locUnits[2][0]['name']} | || | ${locMonsters[2][0]['hp']} | ${locMonsters[2][1]['hp']} | ${locMonsters[2][2]['hp']} | ${locMonsters[2][3]['hp']} | ${locMonsters[2][4]['hp']} | ${locMonsters[2][5]['hp']} | ${locMonsters[2][6]['hp']} |`));
+   // console.log(chalk.white(`| ${locUnits[3][2]['name']} | ${locUnits[3][1]['name']} | ${locUnits[3][0]['name']} | || | ${locMonsters[3][0]['hp']} | ${locMonsters[3][1]['hp']} | ${locMonsters[3][2]['hp']} | ${locMonsters[3][3]['hp']} | ${locMonsters[3][4]['hp']} | ${locMonsters[3][5]['hp']} | ${locMonsters[3][6]['hp']} |`));
+   // console.log(chalk.white(`| ${locUnits[4][2]['name']} | ${locUnits[4][1]['name']} | ${locUnits[4][0]['name']} | || | ${locMonsters[4][0]['hp']} | ${locMonsters[4][1]['hp']} | ${locMonsters[4][2]['hp']} | ${locMonsters[4][3]['hp']} | ${locMonsters[4][4]['hp']} | ${locMonsters[4][5]['hp']} | ${locMonsters[4][6]['hp']} |`));
+   // console.log(chalk.white(`| ${locUnits[5][2]['name']} | ${locUnits[5][1]['name']} | ${locUnits[5][0]['name']} | || | ${locMonsters[5][0]['hp']} | ${locMonsters[5][1]['hp']} | ${locMonsters[5][2]['hp']} | ${locMonsters[5][3]['hp']} | ${locMonsters[5][4]['hp']} | ${locMonsters[5][5]['hp']} | ${locMonsters[5][6]['hp']} |`));
    console.log(`┌` + '─'.repeat(118) + `┐`);
 }
 
@@ -228,6 +411,8 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
       [false, false, false, false, false, false, false],
       [false, false, false, false, false, false, false],
    ];
+
+   let displayMonsters = [];
    // let locUnits = [6][2]; //줄/열
    // 근접,원거리, 버퍼
    // let locUnits = [
@@ -245,17 +430,18 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
    let itemStr = [Items.ITEM_CODE01_NAME, Items.ITEM_CODE02_NAME, Items.ITEM_CODE03_NAME];
 
    //Stage 시작 시 몬스터 소환
-   monsterSpawn(logs, locMonsters, stage, wave);
+   monsterSpawn(logs, locMonsters, displayMonsters, stage, wave);
 
    while (castle.hp > 0 && !isStageClear) {
       console.clear();
 
       //상단 Display출력
-      displayStatus(stage, wave, turn, castle, unitStr, locUnits, monsters);
+      displayStatus(stage, wave, turn, castle, unitStr, locUnits, displayMonsters);
       displayMap(locUnits, locMonsters);
 
       //Logs 출력
       logs.forEach((log) => console.log(log));
+      console.log(displayMonsters.length);
       console.log(`└` + '─'.repeat(118) + `┘`);
 
       //기본 선택문
@@ -673,12 +859,12 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
             turn = Settings.maxTurn;
 
             //웨이브 시작 - 몬스터 소환
-            monsterSpawn(logs, locMonsters, stage, wave);
+            await monsterSpawn(logs, locMonsters, displayMonsters, stage, wave);
          } else {
             turn--;
          }
 
-         await turnEndAction(logs, locUnits, locMonsters, castle, inventory);
+         await turnEndAction(logs, locUnits, locMonsters, castle, inventory, displayMonsters);
       } else if (wave === Settings.maxWave) {
          if (monsters.length === 0) {
             isStageClear = true;
@@ -765,7 +951,7 @@ const mixUnit = (locUnits, unitGradeArr, choiceMix, unitStr, grade) => {
    createUnit(locUnits, choiceMix, unitStr, grade);
 };
 
-const monsterSpawn = (logs, locMonsters, stage, wave) => {
+const monsterSpawn = async (logs, locMonsters, displayMonsters, stage, wave) => {
    //몬스터 소환 수 (1~6)
    const spawnCnt = Math.floor(Math.random() * (10 - 5 + 1)) + 1;
    let locRandom = new Set();
@@ -775,16 +961,19 @@ const monsterSpawn = (logs, locMonsters, stage, wave) => {
       locRandom.add(Math.floor(Math.random() * (10 - 5 + 1)) + 1);
    }
    locRandom = [...locRandom];
-
    //소환
    for (let i = 0; i < locRandom.length; i++) {
-      if (!locMonsters[locRandom[i] - 1][6]) locMonsters[locRandom[i] - 1][6] = new Monster('몹', 0, 'F', 10, 20, 10);
+      if (!locMonsters[locRandom[i] - 1][6]) {
+         locMonsters[locRandom[i] - 1][6] = new Monster('몹', 0, 'F', 5, 10, 100, null);
+         displayMonsters.push(locMonsters[locRandom[i] - 1][6]);
+         locMonsters[locRandom[i] - 1][6]['displayLoc'] = displayMonsters.length - 1;
+      }
    }
    logsPush(logs, chalk.whiteBright(`[Wave:${wave}] 몬스터 ${spawnCnt} 마리가 등장하였습니다.`));
 };
 
 //턴 종료
-const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory) => {
+const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory, displayMonsters) => {
    /***
     * 아군 행동
     *
@@ -809,6 +998,12 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory) => 
                   //처치 시 삭제
                   if (locMonsters[j][k - 1].hp <= 0) {
                      logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 를 처치하였습니다.`));
+
+                     for (let i = locMonsters[j][k - 1]['displayLoc'] + 1; i < displayMonsters.length; i++) {
+                        displayMonsters[i]['displayLoc'] -= 1;
+                     }
+
+                     displayMonsters.splice(locMonsters[j][k - 1]['displayLoc'], 1);
                      locMonsters[j][k - 1] = false;
 
                      getItemRate(logs, inventory); //아이템 획득 여부?
@@ -833,6 +1028,12 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory) => 
                         //처치 시 삭제
                         if (locMonsters[n][k - 1].hp <= 0) {
                            logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 를 처치하였습니다.`));
+
+                           for (let i = locMonsters[n][k - 1]['displayLoc'] + 1; i < displayMonsters.length; i++) {
+                              displayMonsters[i]['displayLoc'] -= 1;
+                           }
+
+                           displayMonsters.splice(locMonsters[n][k - 1]['displayLoc'], 1);
                            locMonsters[n][k - 1] = false;
 
                            getItemRate(logs, inventory); //아이템 획득 여부?
