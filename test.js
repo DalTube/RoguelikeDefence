@@ -2,9 +2,14 @@ import chalk from 'chalk';
 
 // console.log(Math.floor(Math.random() * 500) + 1);
 
-let aa = Math.floor(Math.random() * 100 + 1);
+// let aa = Math.floor(Math.random() * 100 + 1);
+// console.log(aa);
+// console.log(aa / 100);
+
+let aa = ['a', 'b', 'c', 'd', 'e'];
 console.log(aa);
-console.log(aa / 100);
+aa.splice(3, 1);
+console.log(aa);
 
 // console.log(chalk.black(`black 한글`));
 // console.log(chalk.blackBright(`blackBright 한글`));
