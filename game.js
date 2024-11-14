@@ -544,12 +544,11 @@ function displayMap(logs, locUnits, locMonsters) {
    console.log(`┌` + '─'.repeat(118) + `┐` + `│ ` + `${logs[47] ? logs[47] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[47])) : ' '.repeat(65)}` + ` │`);
 }
 
-const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) => {
+const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement) => {
    let logs = [];
    let wave = 1;
    let turn = 5;
    let isStageClear = false;
-
    let monsters = []; //몬스터 생성
    let locMonsters = [
       [false, false, false, false, false, false, false],
@@ -582,7 +581,6 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
 
    while (castle.hp > 0 && !isStageClear) {
       console.clear();
-
       //상단 Display출력
       displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters);
       displayMap(logs, locUnits, locMonsters);
@@ -593,7 +591,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
 
       //기본 선택문
       console.log(`│ ` + chalk.white(`[${choiseStr[0]}]  1. ${unitStr[0]}       2. ${unitStr[1]}           3. ${unitStr[2]}`) + ' '.repeat(62) + ` ││ ` + `${logs[48] ? logs[48] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[48])) : ' '.repeat(65)}` + ` │`);
-      console.log(`│ ` + chalk.white(`[${choiseStr[1]}]  4. ${mixStr[0]}  5. ${mixStr[1]}      6. ${mixStr[2]} ` + chalk.blackBright(`(기본 -> 중급 ${Settings.grade1Per}% | 중급 -> 상급 ${Settings.grade2Per}%)`)) + ' '.repeat(4) + ` ││ ` + `${logs[49] ? logs[49] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[49])) : ' '.repeat(65)}` + ` │`);
+      console.log(`│ ` + chalk.white(`[${choiseStr[1]}]  4. ${mixStr[0]}  5. ${mixStr[1]}      6. ${mixStr[2]} ` + chalk.blackBright(`(기본 -> 중급 ${GameSystem.GRADE2_SUCCESS_PER}% | 중급 -> 상급 ${GameSystem.GRADE3_SUCCESS_PER}%)`)) + ' '.repeat(4) + ` ││ ` + `${logs[49] ? logs[49] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[49])) : ' '.repeat(65)}` + ` │`);
       console.log(`│ ` + chalk.white(`[ ${choiseStr[2]}  ]  7. ${itemStr[0]} (${inventory[0].ea}개)  8. ${itemStr[1]} (${inventory[1].ea}개)  9. ${itemStr[2]} (${inventory[2].ea}개)  0. ${choiseStr[3]}(${castle.repairCnt}회)`) + ' '.repeat(28) + ` ││ ` + `${logs[50] ? logs[50] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[50])) : ' '.repeat(65)}` + ` │`);
       const choice = readlineSync.question('│ 당신의 선택은?' + ' '.repeat(102) + ` ││ ` + `${logs[51] ? logs[51] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[51])) : ' '.repeat(65)}` + ` │` + `\n└` + '─'.repeat(118) + `┘` + `└ ` + '─'.repeat(66) + `┘\n`);
       // console.log(`└` + '─'.repeat(118) + `┘` + `└ ` + '─'.repeat(65) + `┘`);
@@ -608,10 +606,10 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
          case '3':
             let isCreate = createUnit(locUnits, Number(choice), unitStr, 1);
             if (isCreate) {
-               logsPush(logs, chalk.green(`[${choiseStr[choice - 1]}] 유닛을 소환하셨습니다.`));
+               logsPush(logs, chalk.green(`[${choiseStr[0]}] ${unitStr[choice - 1]} 유닛을 소환하셨습니다.`));
 
                if (Number(choice) === 3) {
-                  logsPush(logs, chalk.green(`${choiseStr[choice - 1]} 유닛의 고유 효과가 발동 되었습니다. [공격력 +3]`));
+                  logsPush(logs, chalk.green(`${unitStr[choice - 1]} 유닛의 고유 효과가 발동 되었습니다. [공격력 +3]`));
                   for (let i = 0; i < locUnits.length; i++) {
                      for (let j = 0; j < locUnits[0].length; j++) {
                         if (locUnits[i][j]) {
@@ -660,7 +658,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                   //2등급 생성
                   if (unitGrade1Cnt >= 3) {
                      // 80%의 성공 확률
-                     if (Math.floor(Math.random() * 100) < Settings.grade1Per) {
+                     if (Math.floor(Math.random() * 100) < GameSystem.GRADE2_SUCCESS_PER) {
                         mixUnit(locUnits, unitGrade1Arr, Number(choice) - 3, unitStr, 2);
 
                         logsPush(logs, chalk.blue(`[조합 성공] 중급 ${unitStr[Number(choice) - 3 - 1]} 유닛이 소환되었습니다.`));
@@ -673,7 +671,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                   }
                   //3등급 생성
                   if (unitGrade2Cnt >= 3) {
-                     if (Math.floor(Math.random() * 100) < Settings.grade2Per) {
+                     if (Math.floor(Math.random() * 100) < GameSystem.GRADE3_SUCCESS_PER) {
                         mixUnit(locUnits, unitGrade2Arr, Number(choice) - 3, unitStr, 3);
                         logsPush(logs, chalk.blue(`[조합 성공] 상급 ${unitStr[Number(choice) - 3 - 1]} 유닛이 소환되었습니다.`));
                         isSuccess = true;
@@ -763,7 +761,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                      let unitType = Math.floor(Math.random() * 2) + 1; // 0,1
 
                      // 80%의 성공 확률
-                     if (Math.floor(Math.random() * 100) < Settings.grade1Per) {
+                     if (Math.floor(Math.random() * 100) < GameSystem.GRADE2_SUCCESS_PER) {
                         if (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 2) {
                            for (let i = 0; i < 2; i++) {
                               unitType === 1 ? (locUnits[unitGrade1MArr[i]][unitType - 1] = false) : (locUnits[unitGrade1RArr[i]][unitType - 1] = false);
@@ -809,7 +807,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                      //성공, 실패 결과 유닛
                      let unitType = Math.floor(Math.random() * 2) + 1; // 0,1
 
-                     if (Math.floor(Math.random() * 100) < Settings.grade2Per) {
+                     if (Math.floor(Math.random() * 100) < GameSystem.GRADE3_SUCCESS_PER) {
                         //성공
                         if (unitGrade2MCnt >= 2 && unitGrade2RCnt >= 2) {
                            for (let i = 0; i < 2; i++) {
@@ -904,6 +902,10 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
 
                         displayMonsters.splice(locMonsters[i][j]['displayLoc'], 1);
                         locMonsters[i][j] = false;
+
+                        //킬 카운트
+                        achievement.killCount++;
+                        checkKillCount(logs, achievement);
                      }
                   }
                }
@@ -951,6 +953,10 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
 
                displayMonsters.splice(locMonsters[getMonstersLoc[selectMonster][0]][getMonstersLoc[selectMonster][1]]['displayLoc'], 1);
                locMonsters[getMonstersLoc[selectMonster][0]][getMonstersLoc[selectMonster][1]] = false;
+
+               //킬 카운트
+               achievement.killCount++;
+               checkKillCount(logs, achievement);
             }
 
             inventory[Number(choice) - 6 - 1].useItem();
@@ -986,6 +992,8 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
                logsPush(logs, chalk.white(`성의 체력이 ${repairHp} 회복했습니다.`));
             }
             break;
+         case '99':
+            return (castle.hp = 0);
          case '100':
             process.exit(0);
          default:
@@ -1008,7 +1016,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
             turn--;
          }
 
-         await turnEndAction(logs, locUnits, locMonsters, castle, inventory, displayMonsters);
+         await turnEndAction(logs, locUnits, locMonsters, castle, inventory, displayMonsters, achievement);
       } else if (wave === Settings.maxWave) {
          if (monsters.length === 0) {
             isStageClear = true;
@@ -1032,7 +1040,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn) =
    return isWin;
 };
 
-export async function startGame() {
+export async function startGame(achievement) {
    console.clear();
 
    const castle = new Castle(1000, 0, 3);
@@ -1051,7 +1059,7 @@ export async function startGame() {
    ];
 
    while (stage <= Settings.maxStage) {
-      isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn);
+      isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement);
       // 스테이지 클리어 및 게임 종료 조건
 
       //최종스테이지고 isWin = true면 클리어 아니면 패배
@@ -1119,7 +1127,7 @@ const monsterSpawn = async (logs, locMonsters, displayMonsters, stage, wave) => 
 };
 
 //턴 종료
-const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory, displayMonsters) => {
+const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory, displayMonsters, achievement) => {
    /***
     * 아군 행동
     *
@@ -1153,7 +1161,10 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory, dis
                      locMonsters[j][k - 1] = false;
 
                      getItemRate(logs, inventory); //아이템 획득 여부?
+
                      //킬 카운트
+                     achievement.killCount++;
+                     checkKillCount(logs, achievement);
                   } else {
                      logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[j][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
                   }
@@ -1185,6 +1196,8 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory, dis
                            getItemRate(logs, inventory); //아이템 획득 여부?
 
                            //킬 카운트
+                           achievement.killCount++;
+                           checkKillCount(logs, achievement);
                         } else {
                            logsPush(logs, chalk.white(`${locUnits[j][i]['name']}가 ${locMonsters[n][k - 1]['name']} 에게 데미지 ${locUnits[j][i].attack()} 를 주었습니다.`));
                         }
@@ -1309,4 +1322,16 @@ const getBlankLength = (col, str) => {
    //res : 한글
    //10 : chalk 값
    return col - str.length - res + 10;
+};
+
+const checkKillCount = (logs, achievement) => {
+   if (achievement.killCount === 10) {
+      achievement.isMosterKill01 = true;
+   } else if (achievement.killCount === 100) {
+      achievement.isMosterKill02 = true;
+   } else if (achievement.killCount === 500) {
+      achievement.isMosterKill03 = true;
+   } else if (achievement.killCount === 1000) {
+      achievement.isMosterKill04 = true;
+   }
 };

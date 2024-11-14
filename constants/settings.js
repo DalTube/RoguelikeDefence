@@ -11,3 +11,9 @@ export const CONSOLE_ROW = 56;
 
 export const MAX_LEFT_COL = 120;
 export const MAX_LOGS_COL = 65;
+
+/****
+ * 조합 확률
+ */
+export const GRADE2_SUCCESS_PER = 70;
+export const GRADE3_SUCCESS_PER = 60;
