@@ -1,3 +1,5 @@
+import * as Items from '../constants/items.js';
+
 export class Item {
    //아이템
    constructor(id, name, desc, ea, rate) {
@@ -46,7 +48,7 @@ export class Item {
 
    getItem() {
       let text = ``;
-      if (this._ea >= 10) {
+      if (this._ea >= Items.ITEM_GET_MAX) {
          text = `${this._name} 의 최대 소지수량을 도달하였습니다. (최대 10개)`;
       } else {
          this._ea += 1;
