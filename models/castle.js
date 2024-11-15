@@ -1,8 +1,9 @@
 export class Castle {
    //성
-   constructor(hp, damage, repairCnt) {
+   // constructor(hp, damage, repairCnt) {
+   constructor(hp, repairCnt) {
       this._hp = hp;
-      this._damage = damage;
+      // this._damage = damage;
       this._repairCnt = repairCnt;
    }
 
