@@ -1,10 +1,13 @@
+import * as Items from '../constants/items.js';
+
 export class Item {
    //아이템
-   constructor(id, name, desc, count) {
+   constructor(id, name, desc, ea, rate) {
       this._id = id;
       this._name = name;
       this._desc = desc;
-      this._count = count;
+      this._ea = ea;
+      this._rate = rate;
    }
 
    get id() {
@@ -31,11 +34,27 @@ export class Item {
       this._desc = value;
    }
 
-   get count() {
-      return this._count;
+   get ea() {
+      return this._ea;
    }
 
-   set count(value) {
-      this.count = value;
+   set ea(value) {
+      this._ea = value;
+   }
+
+   useItem() {
+      this._ea -= 1;
+   }
+
+   getItem() {
+      let text = ``;
+      if (this._ea >= Items.ITEM_GET_MAX) {
+         text = `${this._name} 의 최대 소지수량을 도달하였습니다. (최대 10개)`;
+      } else {
+         this._ea += 1;
+         text = `${this._name} 1개 획득`;
+      }
+
+      return text;
    }
 }
