@@ -88,14 +88,14 @@ function displayLobby() {
 }
 
 // 유저 입력을 받아 처리하는 함수
-function handleUserInput() {
+async function handleUserInput() {
    const choice = readlineSync.question(' '.repeat(61) + '입력: ');
 
    switch (choice) {
       case '1':
          // 여기에서 새로운 게임 시작 로직을 구현
-         startGame(achievement);
-         // start();
+         await startGame(achievement, difficulty);
+         start();
          break;
       case '2':
          let isSelect = false;
