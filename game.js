@@ -11,10 +11,10 @@ import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
 import figlet from 'figlet';
 
-function displayEnd(isWin, isAchive, level) {
+function displayEnd(isWin, isAchive, difficulty) {
    console.clear();
 
-   let levelArr = ['쉬움', '보통', '어려움', '지옥'];
+   let difficultyArr = ['쉬움', '보통', '어려움', '지옥'];
 
    for (let i = 0; i < 16; i++) {
       console.log('');
@@ -57,19 +57,18 @@ function displayEnd(isWin, isAchive, level) {
    console.log('');
    console.log('');
    if (isWin && isAchive) {
-      console.log(' '.repeat(70) + `${levelArr[level - 1]}` + ' 난이도 업적 획득!!!');
+      console.log(' '.repeat(70) + `${difficultyArr[difficulty - 1]}` + ' 난이도 업적 획득!!!');
    }
    console.log('');
    const choice = readlineSync.question(' '.repeat(70) + `나가기: ENTER`);
 }
 
-function displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters) {
-   let statusText = `│ 난이도: 보통 | 스테이지: ${stage} | 웨이브: ${wave} | 다음 웨이브: ${turn}턴 | 성 체력: ${castle.hp}/${Settings.maxCastleHp}`;
-
-   let blank = GameSystem.MAX_LEFT_COL - statusText.length - 22; //왜 22를 빼야할까? byte 연관인 것 같은데...
+function displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters, difficulty) {
+   let difficultyArr = ['쉬움', '보통', '어려움', '지옥'];
+   let statusText = `│ 난이도: ${difficultyArr[difficulty - 1]} | 스테이지: ${stage} | 웨이브: ${wave} | 다음 웨이브: ${turn}턴 | 성 체력: ${castle.hp}/${GameSystem.CASTLE_MAX_HP}`;
 
    console.log(`┌` + '─'.repeat(118) + `┐` + `┌─ ` + ` MESSAGE ` + '─'.repeat(56) + `┐`);
-   console.log(`${statusText}` + ' '.repeat(blank) + `│` + `│ ` + ' '.repeat(65) + ` │`);
+   console.log(`${statusText}` + ' '.repeat(getBlankLength(GameSystem.MAX_LEFT_COL, statusText) - 10) + `│` + `│ ` + ' '.repeat(65) + ` │`);
 
    console.log(`└` + '─'.repeat(118) + `┘` + `│ ` + logs[0] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[0])) + ` │`);
    let unitGradeStart = [`☆    `, `☆☆  `, `☆☆☆`];
@@ -595,10 +594,15 @@ function displayMap(logs, locUnits, locMonsters) {
    console.log(`┌` + '─'.repeat(118) + `┐` + `│ ` + `${logs[47] ? logs[47] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[47])) : ' '.repeat(65)}` + ` │`);
 }
 
-const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement) => {
+const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement, difficulty) => {
    let logs = [];
    let wave = 1;
-   let turn = Settings.maxTurn;
+   let turn = 0;
+
+   if (wave != GameSystem.MAX_WAVE) {
+      turn = GameSystem.MAX_TURN;
+   }
+
    let isStageClear = false;
    let locMonsters = [
       [false, false, false, false, false, false, false],
@@ -609,31 +613,20 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
       [false, false, false, false, false, false, false],
    ];
 
-   let displayMonsters = [];
-   // let locUnits = [6][2]; //줄/열
-   // 근접,원거리, 버퍼
-   // let locUnits = [
-   //    [false, false, false],
-   //    [false, false, false],
-   //    [false, false, false],
-   //    [false, false, false],
-   //    [false, false, false],
-   //    [false, false, false],
-   // ];
-
+   let displayMonsters = []; //몬스터 정보란
    let choiseStr = ['유닛 소환', '유닛 조합', '아이템', `수리`]; //기본 선택지
    let mixStr = ['근접 조합', '원거리 조합', '무작위 조합(근접,원거리)']; //조합 선택지
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
    let itemStr = [Items.ITEM_CODE01_NAME, Items.ITEM_CODE02_NAME, Items.ITEM_CODE03_NAME];
 
    //Stage 시작 시 몬스터 소환
-   monsterSpawn(logs, locMonsters, displayMonsters, stage, wave);
+   monsterSpawn(logs, locMonsters, displayMonsters, stage, wave, difficulty);
 
    while (castle.hp > 0 && !isStageClear) {
       console.clear();
 
       //상단 Display출력
-      displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters);
+      displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters, difficulty);
       displayMap(logs, locUnits, locMonsters);
 
       //Logs 출력
@@ -645,7 +638,6 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
       console.log(`│ ` + chalk.white(`[ ${choiseStr[2]}  ]  7. ${itemStr[0]} (${inventory[0].ea}개)  8. ${itemStr[1]} (${inventory[1].ea}개)  9. ${itemStr[2]} (${inventory[2].ea}개)  0. ${choiseStr[3]}(${castle.repairCnt}회)`) + ' '.repeat(28) + ` ││ ` + `${logs[50] ? logs[50] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[50])) : ' '.repeat(65)}` + ` │`);
 
       const choice = readlineSync.question('│ 당신의 선택은?' + ' '.repeat(102) + ` ││ ` + `${logs[51] ? logs[51] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[51])) : ' '.repeat(65)}` + ` │` + `\n└` + '─'.repeat(118) + `┘` + `└ ` + '─'.repeat(66) + `┘\n`);
-      // const choice = readlineSync.question('당신의 선택은?');
 
       let isContinue = false;
       let isSuccess = false;
@@ -1019,7 +1011,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
             break;
          case '0':
             //수리
-            if (castle.hp === Settings.maxCastleHp) {
+            if (castle.hp === GameSystem.CASTLE_MAX_HP) {
                logsPush(logs, chalk.red(`성의 체력이 이미 가득 차 있습니다.`));
                continue;
             }
@@ -1031,7 +1023,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
 
             if (Math.floor(Math.random() * 100 + 1) <= 5) {
                //풀피 회복
-               castle.hp = Settings.maxCastleHp;
+               castle.hp = GameSystem.CASTLE_MAX_HP;
                logsPush(logs, chalk.white(`5%의 기적! 성의 체력이 최대치로 회복했습니다.`));
             } else {
                const maxRepairHp = 100;
@@ -1041,12 +1033,15 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                   repairHp = maxRepairHp;
                }
 
-               if (castle.hp + repairHp > Settings.maxCastleHp) repairHp = Settings.maxCastleHp - castle.hp;
+               if (castle.hp + repairHp > GameSystem.CASTLE_MAX_HP) repairHp = GameSystem.CASTLE_MAX_HP - castle.hp;
 
                castle.repair(repairHp);
 
                logsPush(logs, chalk.white(`성의 체력이 ${repairHp} 회복했습니다.`));
             }
+            break;
+         case '99':
+            castle.hp = 0;
             break;
          case '100':
             process.exit(0);
@@ -1061,23 +1056,24 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
 
       await turnEndAction(logs, locUnits, locMonsters, castle, inventory, displayMonsters, achievement);
 
-      if (wave !== Settings.maxWave) {
+      if (wave !== GameSystem.MAX_WAVE) {
          //현재 턴이 0이면 웨이브 +1 아니면 턴 -1
 
-         if (turn === 0) {
+         if (turn === 1) {
             wave++;
-            turn = Settings.maxTurn;
+            turn = GameSystem.MAX_TURN;
 
             //웨이브 시작 - 몬스터 소환
-            monsterSpawn(logs, locMonsters, displayMonsters, stage, wave);
+            monsterSpawn(logs, locMonsters, displayMonsters, stage, wave, difficulty);
          } else {
             turn--;
          }
-      } else if (wave === Settings.maxWave) {
+      } else if (wave === GameSystem.MAX_WAVE) {
+         turn = '-';
          if (displayMonsters.length === 0) {
             isStageClear = true;
 
-            if (stage === Settings.maxStage) {
+            if (stage === GameSystem.MAX_STAGE) {
                isWin = true;
             }
          }
@@ -1096,10 +1092,11 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
    return isWin;
 };
 
-export async function startGame(achievement) {
+export async function startGame(achievement, difficulty) {
    console.clear();
 
-   const castle = new Castle(1000, 0, 3);
+   // const castle = new Castle(1000, 0, 3);
+   const castle = new Castle(1000, 3);
    const inventory = createInventory();
 
    let stage = 1;
@@ -1116,15 +1113,15 @@ export async function startGame(achievement) {
       [false, false, false],
    ];
 
-   while (stage <= Settings.maxStage) {
-      isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement);
+   while (stage <= GameSystem.MAX_STAGE) {
+      isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement, difficulty);
       // 스테이지 클리어 및 게임 종료 조건
 
       //최종스테이지고 isWin = true면 클리어 아니면 패배
       stage++;
    }
 
-   endGame(isWin);
+   endGame(isWin, difficulty, achievement);
 
    return isWin;
 }
@@ -1137,7 +1134,8 @@ const createUnit = (locUnits, idx, unitStr, grade) => {
       if (!locUnits[i][Number(idx) - 1]) {
          if (Number(idx) === 3 && locUnits[0][2]) return false;
 
-         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 : idx === 2 ? 1 : 0, 10, false, locUnits[0][2] ? true : false);
+         locUnits[i][Number(idx) - 1] = new Unit(gradeText + unitStr[idx - 1] + (i + 1), idx - 1, grade, idx === 1 ? 2 + grade * 3 : idx === 2 ? 1 + grade * 2 : 0, 10, false, locUnits[0][2] ? true : false);
+         locUnits[i][Number(idx) - 1].unitBuff();
          return true;
       }
    }
@@ -1155,20 +1153,50 @@ const mixUnit = (locUnits, unitGradeArr, choiceMix, unitStr, grade) => {
    createUnit(locUnits, choiceMix, unitStr, grade);
 };
 
-const monsterSpawn = async (logs, locMonsters, displayMonsters, stage, wave) => {
+const monsterSpawn = async (logs, locMonsters, displayMonsters, stage, wave, difficulty) => {
+   /*********************
+    * 쉬움     1~6마리
+    * 보통     1~6마리
+    * 어려움   스테이지 5이하 1~6 6부터 3~6마리
+    * 지옥     6마리 고정
+    */
+
    //몬스터 소환 수 (1~6)
-   const spawnCnt = Math.floor(Math.random() * (10 - 5 + 1)) + 1;
+   let spawnCnt = 0;
+
+   if (difficulty === 1 || difficulty === 2) {
+      spawnCnt = Math.floor(Math.random() * 6) + 1;
+   } else if (difficulty === 3) {
+      if (stage <= 5) {
+         spawnCnt = Math.floor(Math.random() * 6) + 1; //1~6
+      } else {
+         spawnCnt = Math.floor(Math.random() * 4) + 3; //3~6
+      }
+   } else {
+      spawnCnt = 6;
+   }
+
    let locRandom = new Set();
 
    //소환 위치 정하기
    while (locRandom.size < spawnCnt) {
-      locRandom.add(Math.floor(Math.random() * (10 - 5 + 1)) + 1);
+      locRandom.add(Math.floor(Math.random() * 6) + 1);
    }
    locRandom = [...locRandom];
+   let monsterName = [
+      ['슬라임', '고블린', '골렘', '트롤', '미믹', '벤시', '좀비', '듀라한', '메두사', '코볼트'],
+      ['비홀더', '키메라', '가고일', '리치', '스펙터', '와이번', '임프', '나가', '라미아', '드래곤'],
+   ];
+
+   //몬스터 유형 [체력 상 공격 하 , 체력 하 공격 상, 체력 중 공격 중, 체력 상, 공격 상  ]
+   let damage = Math.floor(difficulty * (stage / 2) + (Math.random() * 5 + 1));
+   let hp = 10 + Math.floor(difficulty * (stage / 2) + (Math.random() * 20 + 1));
+
    //소환
    for (let i = 0; i < locRandom.length; i++) {
+      let type = Math.floor(Math.random() * 2);
       if (!locMonsters[locRandom[i] - 1][6]) {
-         locMonsters[locRandom[i] - 1][6] = new Monster('몹몹', Math.floor(Math.random() * 2), 'F', 1, 1, 0, null);
+         locMonsters[locRandom[i] - 1][6] = new Monster(monsterName[type][Math.floor(Math.random() * 10)], type, 'N', hp, damage, 0, null);
          displayMonsters.push(locMonsters[locRandom[i] - 1][6]);
          locMonsters[locRandom[i] - 1][6]['displayLoc'] = displayMonsters.length - 1;
       }
@@ -1320,22 +1348,22 @@ const buffItemControl = (locUnits, isBuff) => {
    }
 };
 
-function endGame(isWin, level, achievement) {
+function endGame(isWin, difficulty, achievement) {
    let isAchive = false;
    if (isWin) {
       //승리 화면
 
       //업적 처리
-      if (level === 1 && !achievement.isLvEasy) {
+      if (difficulty === 1 && !achievement.isLvEasy) {
          achievement.isLvEasy = true;
          isAchive = true;
-      } else if (level === 2 && !achievement.isLvNomal) {
+      } else if (difficulty === 2 && !achievement.isLvNomal) {
          achievement.isLvNomal = true;
          isAchive = true;
-      } else if (level === 3 && !achievement.isLvHard) {
+      } else if (difficulty === 3 && !achievement.isLvHard) {
          achievement.isLvHard = true;
          isAchive = true;
-      } else if (level === 4 && !achievement.isLvHell) {
+      } else if (difficulty === 4 && !achievement.isLvHell) {
          achievement.isLvHell = true;
          isAchive = true;
       }
@@ -1343,7 +1371,7 @@ function endGame(isWin, level, achievement) {
       //초기 화면 이동
    }
 
-   displayEnd(isWin, isAchive, level);
+   displayEnd(isWin, isAchive, difficulty);
 }
 
 const createInventory = () => {
@@ -1355,7 +1383,7 @@ const createInventory = () => {
 };
 
 const getItemRate = (logs, inventory) => {
-   //개별로 확률이 존재. 하지만
+   //개별로 확률이 존재.
    const itemsRates = [Items.ITEM_CODE01_RATE, Items.ITEM_CODE02_RATE, Items.ITEM_CODE03_RATE];
 
    for (let i = 0; i < itemsRates.length; i++) {
@@ -1395,7 +1423,7 @@ const checkKillCount = (logs, achievement) => {
       logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MONSTER_KILL01_NAME} 획득!!!`));
    } else if (achievement.killCount === 100) {
       achievement.isMosterKill02 = true;
-      logsPush(logs, chalk.yellowBright(`[업적] ${evemens.ACHIVE_MONSTER_KILL02_NAME} 획득!!!`));
+      logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MONSTER_KILL02_NAME} 획득!!!`));
    } else if (achievement.killCount === 500) {
       achievement.isMosterKill03 = true;
       logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MONSTER_KILL03_NAME} 획득!!!`));
@@ -1414,3 +1442,5 @@ const checkAhchiveUnit = (logs, achievement, unitKind) => {
       logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_RANGED_MAX_GRADE_NAME} 획득!!!`));
    }
 };
+
+const createMonsterData = (difficulty) => {};
