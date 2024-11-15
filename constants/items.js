@@ -3,6 +3,7 @@
  */
 
 export const ITEM_KIND_MAX_CNT = 3;
+export const ITEM_GET_MAX = 9;
 
 export const ITEM_CODE01_CODE = 'item01';
 export const ITEM_CODE01_NAME = '버프 스톤';

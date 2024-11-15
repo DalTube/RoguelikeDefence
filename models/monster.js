@@ -1,12 +1,13 @@
 export class Monster {
    //몬스터
-   constructor(name, type, grade, hp, damage, critical) {
+   constructor(name, type, grade, hp, damage, critical, displayLoc) {
       this._name = name;
       this._type = type;
       this._grade = grade;
       this._hp = hp;
       this._damage = damage;
       this._critical = critical;
+      this._displayLoc = displayLoc;
    }
 
    get name() {
@@ -55,6 +56,14 @@ export class Monster {
 
    set critical(value) {
       this._critical = value;
+   }
+
+   get displayLoc() {
+      return this._displayLoc;
+   }
+
+   set displayLoc(value) {
+      this._displayLoc = value;
    }
 
    attack() {

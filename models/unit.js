@@ -65,6 +65,7 @@ export class Unit {
 
    set isUnitBuff(value) {
       this._isUnitBuff = value;
+      this.unitBuff();
    }
 
    attack() {
@@ -88,6 +89,6 @@ export class Unit {
    }
 
    unitBuff() {
-      this._isUnitBuff ? (this._damage += 3) : (this._damage -= 3);
+      this._isUnitBuff ? (this._damage += 3) : null;
    }
 }
