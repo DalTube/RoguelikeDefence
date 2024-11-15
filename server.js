@@ -8,6 +8,8 @@ import * as Achieve from './constants/achievements.js';
 import { Achievement } from './models/achievement.js';
 
 const achievement = new Achievement(0, false, false, false, false, false, false, false, false, false, false);
+let difficulty = 1;
+const difficultyArr = ['쉬움', '보통', '어려움', '지옥'];
 
 function displayChage() {
    exec(`mode con: cols=${GameSystem.CONSOLE_COL} lines=${GameSystem.CONSOLE_ROW}`, (error, stdout, stderr) => {
@@ -73,9 +75,9 @@ function displayLobby() {
    console.log();
 
    // 옵션들
-   console.log(' '.repeat(61) + chalk.blue('1.') + chalk.white(' 새로운 게임 시작'));
-   console.log(' '.repeat(61) + chalk.blue('2.') + chalk.white(' 업적 확인하기'));
-   console.log(' '.repeat(61) + chalk.blue('3.') + chalk.white(' 난이도 설정'));
+   console.log(' '.repeat(61) + chalk.blue('1.') + chalk.white(' 새로운 게임 시작' + ` [${GameSystem.difficultyArr[difficulty - 1]}]`));
+   console.log(' '.repeat(61) + chalk.blue('2.') + chalk.white(' 난이도 설정'));
+   console.log(' '.repeat(61) + chalk.blue('3.') + chalk.white(' 업적 확인하기'));
    console.log(' '.repeat(61) + chalk.blue('4.') + chalk.white(' 종료'));
 
    // 하단 경계선
@@ -88,35 +90,40 @@ function displayLobby() {
 // 유저 입력을 받아 처리하는 함수
 function handleUserInput() {
    const choice = readlineSync.question(' '.repeat(61) + '입력: ');
-   console.clear();
 
    switch (choice) {
       case '1':
-         console.log(chalk.green('게임을 시작합니다.'));
          // 여기에서 새로운 게임 시작 로직을 구현
          startGame(achievement);
-         start();
+         // start();
          break;
-      // break;
       case '2':
+         let isSelect = false;
+         isSelect = difficultyInputHandler(isSelect);
+
+         if (isSelect) {
+            start();
+         } else {
+            console.clear();
+            console.log(chalk.red('게임을 종료합니다.'));
+            process.exit(0); // 게임 종료
+         }
+         break;
+      case '3':
          //   console.log(chalk.yellow('구현 준비중입니다.. 게임을 시작하세요'));
          // 업적 확인하기 로직을 구현
          displayAchivements();
          start();
          break;
-      case '3':
-         console.log(chalk.blue('구현 준비중입니다.. 게임을 시작하세요'));
-         // 옵션 메뉴 로직을 구현
-         start();
-         break;
       case '4':
+         console.clear();
          console.log(chalk.red('게임을 종료합니다.'));
          // 게임 종료 로직을 구현
          process.exit(0); // 게임 종료
          break;
       default:
-         console.log(chalk.red('올바른 선택을 하세요.'));
-         start(); // 유효하지 않은 입력일 경우 다시 입력 받음
+         console.log(' '.repeat(61) + chalk.red('올바른 선택을 하세요.'));
+         handleUserInput(); // 유효하지 않은 입력일 경우 다시 입력 받음
          return;
    }
 }
@@ -186,6 +193,44 @@ function displayAchivements() {
    console.log(' '.repeat(49) + ` =` + '='.repeat(45) + `=` + '='.repeat(44) + `=`);
 
    const choice = readlineSync.question('\n' + ' '.repeat(50) + "초기화면:'ENTER'");
+}
+
+function difficultyInputHandler(isSelect) {
+   console.log('\n' + ' '.repeat(61) + `[1. 쉬움 2. 보통 ` + `${achievement.isLvNomal ? '3. 어려움' : chalk.blackBright('3. 어려움')}` + `${achievement._isLvHard ? ' 4. 지옥' : ''}]`);
+   const difficultChoice = readlineSync.question(' '.repeat(61) + '입력: ');
+   switch (difficultChoice) {
+      case '1':
+      case '2':
+         difficulty = Number(difficultChoice);
+         isSelect = true;
+         break;
+      case '3':
+         if (!achievement.isLvNomal) {
+            console.log(chalk.red(' '.repeat(61) + '보통 난이도 클리어 후 가능합니다.'));
+            isSelect = difficultyInputHandler(isSelect);
+            break;
+         } else {
+            difficulty = Number(difficultChoice);
+            isSelect = true;
+            break;
+         }
+      case '4':
+         if (!achievement.isLvHard) {
+            console.log(chalk.red(' '.repeat(61) + '올바른 선택을 하세요.'));
+            isSelect = difficultyInputHandler(isSelect);
+            break;
+         } else {
+            difficulty = Number(difficultChoice);
+            isSelect = true;
+            break;
+         }
+      default:
+         console.log(chalk.red(' '.repeat(61) + '올바른 선택을 하세요.'));
+         isSelect = difficultyInputHandler(isSelect);
+         break;
+   }
+
+   return isSelect;
 }
 
 // 게임 실행

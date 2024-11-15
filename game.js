@@ -5,9 +5,63 @@ import { Monster } from './models/monster.js';
 import { Unit } from './models/unit.js';
 import { Item } from './models/item.js';
 import * as Items from './constants/items.js';
+import * as Achievemens from './constants/achievements.js';
 import * as GameSystem from './constants/settings.js';
 import { logsPush } from './utils/utils.js';
 import * as Settings from './settings.js';
+import figlet from 'figlet';
+
+function displayEnd(isWin, isAchive, level) {
+   console.clear();
+
+   let levelArr = ['쉬움', '보통', '어려움', '지옥'];
+
+   for (let i = 0; i < 16; i++) {
+      console.log('');
+   }
+
+   console.log(' '.repeat(68) + `┌` + '─'.repeat(50) + `┐`);
+   console.log(' '.repeat(68) + `│` + ' '.repeat(50) + `│ `);
+   console.log(' '.repeat(68) + `│` + ' '.repeat(50) + `│ `);
+   console.log('');
+   console.log('');
+
+   if (isWin) {
+      console.log(
+         chalk.cyan(
+            figlet.textSync(' '.repeat(82) + 'WIN', {
+               font: 'Standard',
+               horizontalLayout: 'default',
+               verticalLayout: 'default',
+            }),
+         ),
+      );
+   } else {
+      console.log(
+         chalk.cyan(
+            figlet.textSync(' '.repeat(82) + 'LOSE', {
+               font: 'Standard',
+               horizontalLayout: 'default',
+               verticalLayout: 'default',
+            }),
+         ),
+      );
+   }
+
+   console.log('');
+   console.log('');
+   console.log(' '.repeat(68) + `│` + ' '.repeat(50) + `│ `);
+   console.log(' '.repeat(68) + `│` + ' '.repeat(50) + `│ `);
+   console.log(' '.repeat(68) + `└` + '─'.repeat(50) + `┘`);
+
+   console.log('');
+   console.log('');
+   if (isWin && isAchive) {
+      console.log(' '.repeat(70) + `${levelArr[level - 1]}` + ' 난이도 업적 획득!!!');
+   }
+   console.log('');
+   const choice = readlineSync.question(' '.repeat(70) + `나가기: ENTER`);
+}
 
 function displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters) {
    let statusText = `│ 난이도: 보통 | 스테이지: ${stage} | 웨이브: ${wave} | 다음 웨이브: ${turn}턴 | 성 체력: ${castle.hp}/${Settings.maxCastleHp}`;
@@ -290,7 +344,7 @@ function displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displ
 function displayMap(logs, locUnits, locMonsters) {
    let monsterTypeL = ['(', '<'];
    let monsterTypeR = [')', '>'];
-   //백업용
+   //초기 기획 디자인
    // console.log(line);
    // console.log(chalk.white('                   _____'));
    // console.log(chalk.white('                  <_____|'));
@@ -313,8 +367,10 @@ function displayMap(logs, locUnits, locMonsters) {
    // console.log(chalk.white("|         |    .' 🐉  🐉  🐉     🐉     🐉     🐉     🐉"));
    // console.log(chalk.white("|         |  .'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ __"));
    // console.log(chalk.white("|_________|.'                                                         \n"));
-   // console.log(line);
-   // console.log(``);
+
+   /******
+    * 유닛 베이스
+    */
    // console.log(' '.repeat(11) + ` O ) ` + ' '.repeat(4) + `┃ O__`);
    // console.log(' '.repeat(11) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
    // console.log(' '.repeat(11) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
@@ -339,7 +395,6 @@ function displayMap(logs, locUnits, locMonsters) {
    // console.log(' '.repeat(1) + `<|[-]=> ` + ' '.repeat(1) + `╋/|)_)`);
    // console.log(' '.repeat(1) + `/ \\) ` + ' '.repeat(4) + ` / \\`);
    // console.log(``);
-
    // console.log(` O /`);
    // console.log(`<|\\|`);
    // console.log(`/ \\|)`);
@@ -356,11 +411,9 @@ function displayMap(logs, locUnits, locMonsters) {
    console.log(' '.repeat(17) + `${locUnits[0][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[0][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/|' + ' '.repeat(83) + `│ ` + `${logs[20] ? logs[20] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[20])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(17) + `${locUnits[0][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[0][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(1) + '|' + ' '.repeat(83) + `│ ` + `${logs[21] ? logs[21] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[21])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(17) + `${locUnits[0][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[0][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(2) + '|' + ' '.repeat(83) + `│ ` + `${logs[22] ? logs[22] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[22])) : ' '.repeat(65)}` + ` │`);
-   // console.log(``);
    console.log(' '.repeat(14) + `${locUnits[1][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[1][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(3) + '|' + ' '.repeat(83) + `│ ` + `${logs[23] ? logs[23] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[23])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(14) + `${locUnits[1][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[1][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(4) + '|' + ' '.repeat(83) + `│ ` + `${logs[24] ? logs[24] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[24])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(14) + `${locUnits[1][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[1][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(5) + '|' + ' '.repeat(83) + `│ ` + `${logs[25] ? logs[25] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[25])) : ' '.repeat(65)}` + ` │`);
-   // console.log(``);
    console.log(' '.repeat(11) + `${locUnits[2][1] ? ' O ) ' : '     '}` + ' '.repeat(4) + `${locUnits[2][0] ? '┃ O__' : '     '}` + ' '.repeat(4) + '/' + ' '.repeat(6) + '|' + ' '.repeat(83) + `│ ` + `${logs[26] ? logs[26] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[26])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(11) + `${locUnits[2][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[2][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(7) + '|' + ' '.repeat(83) + `│ ` + `${logs[27] ? logs[27] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[27])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(1) + `${locUnits[0][2] ? ' O / ' : '     '}` + ' '.repeat(5) + `${locUnits[2][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[2][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(8) + '|' + ' '.repeat(4) + 'ㅡ'.repeat(39) + ' '.repeat(1) + `│ ` + `${logs[28] ? logs[28] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[28])) : ' '.repeat(65)}` + ` │`);
@@ -400,7 +453,6 @@ function displayMap(logs, locUnits, locMonsters) {
 
    console.log(' '.repeat(7) + `${locUnits[3][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[3][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(4) + '/+++|' + ' '.repeat(2) + '|' + ' '.repeat(4) + `${locMonsters[0][0] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[0][1] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[0][2] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[0][3] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[0][4] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[0][5] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[0][6] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(6) + `│ ` + `${logs[31] ? logs[31] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[31])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(7) + `${locUnits[3][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[3][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(3) + '/+++++|' + ' '.repeat(4) + `${locMonsters[1][0] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][1] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][2] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][3] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][4] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][5] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][6] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(9) + `│ ` + `${logs[32] ? logs[32] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[32])) : ' '.repeat(65)}` + ` │`);
-   // console.log(``);
    console.log(
       ' '.repeat(4) +
          `${locUnits[4][1] ? ' O ) ' : '     '}` +
@@ -431,7 +483,6 @@ function displayMap(logs, locUnits, locMonsters) {
    );
    console.log(' '.repeat(4) + `${locUnits[4][1] ? '<|[-]=> ' : '        '}` + ' '.repeat(1) + `${locUnits[4][0] ? '╋/|)_)' : '      '}` + ' '.repeat(2) + '/' + ' '.repeat(3) + '/+++++++|' + ' '.repeat(4) + `${locMonsters[1][0] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][1] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][2] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][3] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][4] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][5] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[1][6] ? ' \\ㅡㅡ/' : ' '.repeat(7)}` + ' '.repeat(9) + `│ ` + `${logs[34] ? logs[34] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[34])) : ' '.repeat(65)}` + ` │`);
    console.log(' '.repeat(4) + `${locUnits[4][1] ? '/ \\) ' : '     '}` + ' '.repeat(4) + `${locUnits[4][0] ? ' / \\' : '    '}` + ' '.repeat(3) + '/' + ' '.repeat(4) + '/+++++++' + ' '.repeat(2) + `${locMonsters[2][0] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[2][1] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[2][2] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[2][3] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[2][4] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[2][5] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(4) + `${locMonsters[2][6] ? ' /ㅡㅡ\\' : ' '.repeat(7)}` + ' '.repeat(12) + `│ ` + `${logs[35] ? logs[35] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[35])) : ' '.repeat(65)}` + ` │`);
-   // console.log(``);
    console.log(
       ' '.repeat(1) +
          `${locUnits[5][1] ? ' O ) ' : '     '}` +
@@ -547,9 +598,8 @@ function displayMap(logs, locUnits, locMonsters) {
 const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement) => {
    let logs = [];
    let wave = 1;
-   let turn = 5;
+   let turn = Settings.maxTurn;
    let isStageClear = false;
-   let monsters = []; //몬스터 생성
    let locMonsters = [
       [false, false, false, false, false, false, false],
       [false, false, false, false, false, false, false],
@@ -581,20 +631,21 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
 
    while (castle.hp > 0 && !isStageClear) {
       console.clear();
+
       //상단 Display출력
       displayStatus(logs, stage, wave, turn, castle, unitStr, locUnits, displayMonsters);
       displayMap(logs, locUnits, locMonsters);
 
       //Logs 출력
       // logs.forEach((log) => console.log(log));
-      // console.log(`└` + '─'.repeat(118) + `┘`);
 
       //기본 선택문
       console.log(`│ ` + chalk.white(`[${choiseStr[0]}]  1. ${unitStr[0]}       2. ${unitStr[1]}           3. ${unitStr[2]}`) + ' '.repeat(62) + ` ││ ` + `${logs[48] ? logs[48] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[48])) : ' '.repeat(65)}` + ` │`);
       console.log(`│ ` + chalk.white(`[${choiseStr[1]}]  4. ${mixStr[0]}  5. ${mixStr[1]}      6. ${mixStr[2]} ` + chalk.blackBright(`(기본 -> 중급 ${GameSystem.GRADE2_SUCCESS_PER}% | 중급 -> 상급 ${GameSystem.GRADE3_SUCCESS_PER}%)`)) + ' '.repeat(4) + ` ││ ` + `${logs[49] ? logs[49] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[49])) : ' '.repeat(65)}` + ` │`);
       console.log(`│ ` + chalk.white(`[ ${choiseStr[2]}  ]  7. ${itemStr[0]} (${inventory[0].ea}개)  8. ${itemStr[1]} (${inventory[1].ea}개)  9. ${itemStr[2]} (${inventory[2].ea}개)  0. ${choiseStr[3]}(${castle.repairCnt}회)`) + ' '.repeat(28) + ` ││ ` + `${logs[50] ? logs[50] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[50])) : ' '.repeat(65)}` + ` │`);
+
       const choice = readlineSync.question('│ 당신의 선택은?' + ' '.repeat(102) + ` ││ ` + `${logs[51] ? logs[51] + ' '.repeat(getBlankLength(GameSystem.MAX_LOGS_COL, logs[51])) : ' '.repeat(65)}` + ` │` + `\n└` + '─'.repeat(118) + `┘` + `└ ` + '─'.repeat(66) + `┘\n`);
-      // console.log(`└` + '─'.repeat(118) + `┘` + `└ ` + '─'.repeat(65) + `┘`);
+      // const choice = readlineSync.question('당신의 선택은?');
 
       let isContinue = false;
       let isSuccess = false;
@@ -624,7 +675,6 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                else logsPush(logs, chalk.red(`${unitStr[choice - 1]} 유닛을 더 이상 소환할 수 없습니다.(최대 6)`));
                continue;
             }
-
          case '4':
          case '5':
             //조합
@@ -675,6 +725,9 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                         mixUnit(locUnits, unitGrade2Arr, Number(choice) - 3, unitStr, 3);
                         logsPush(logs, chalk.blue(`[조합 성공] 상급 ${unitStr[Number(choice) - 3 - 1]} 유닛이 소환되었습니다.`));
                         isSuccess = true;
+
+                        //업적 체크
+                        if (!achievement.isMeleeMaxGrade || !achievement.isRangedMaxGrade) checkAhchiveUnit(logs, achievement, Number(choice) - 3 - 1);
                      } else {
                         locUnits[unitGrade2Arr[unitGrade2Arr.length - 1]][Number(choice) - 3 - 1] = false;
                         logsPush(logs, chalk.red(`[조합 실패] ${unitStr[Number(choice) - 3 - 1]} 유닛이 소모되었습니다.`));
@@ -805,7 +858,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                      }
                   } else if (isGrade2) {
                      //성공, 실패 결과 유닛
-                     let unitType = Math.floor(Math.random() * 2) + 1; // 0,1
+                     let unitType = Math.floor(Math.random() * 2) + 1;
 
                      if (Math.floor(Math.random() * 100) < GameSystem.GRADE3_SUCCESS_PER) {
                         //성공
@@ -844,6 +897,9 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                         }
                         logsPush(logs, chalk.blue(`[조합 성공] 상급 ${unitStr[unitType - 1]} 유닛이 소환되었습니다.`));
                         isSuccess = true;
+
+                        //업적 체크
+                        if (!achievement.isMeleeMaxGrade || !achievement.isRangedMaxGrade) checkAhchiveUnit(logs, achievement, unitType - 1);
                      } else {
                         //실패
                         unitType === 1 ? (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false) : (locUnits[unitGrade2RArr[unitGrade2RArr.length - 1]][unitType - 1] = false);
@@ -992,8 +1048,6 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                logsPush(logs, chalk.white(`성의 체력이 ${repairHp} 회복했습니다.`));
             }
             break;
-         case '99':
-            return (castle.hp = 0);
          case '100':
             process.exit(0);
          default:
@@ -1004,21 +1058,23 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
       /***
        * 웨이브, 턴 처리
        */
+
+      await turnEndAction(logs, locUnits, locMonsters, castle, inventory, displayMonsters, achievement);
+
       if (wave !== Settings.maxWave) {
          //현재 턴이 0이면 웨이브 +1 아니면 턴 -1
+
          if (turn === 0) {
             wave++;
             turn = Settings.maxTurn;
 
             //웨이브 시작 - 몬스터 소환
-            await monsterSpawn(logs, locMonsters, displayMonsters, stage, wave);
+            monsterSpawn(logs, locMonsters, displayMonsters, stage, wave);
          } else {
             turn--;
          }
-
-         await turnEndAction(logs, locUnits, locMonsters, castle, inventory, displayMonsters, achievement);
       } else if (wave === Settings.maxWave) {
-         if (monsters.length === 0) {
+         if (displayMonsters.length === 0) {
             isStageClear = true;
 
             if (stage === Settings.maxStage) {
@@ -1049,6 +1105,8 @@ export async function startGame(achievement) {
    let stage = 1;
    let isWin = false;
    let itemBuffTurn = 0;
+
+   // 근접,원거리, 버퍼
    let locUnits = [
       [false, false, false],
       [false, false, false],
@@ -1066,21 +1124,13 @@ export async function startGame(achievement) {
       stage++;
    }
 
-   if (isWin) {
-      //클리어 화면
-      console.clear();
-      console.log('승리');
-   } else {
-      //패배 화면
-      console.clear();
-      console.log('패배');
-   }
+   endGame(isWin);
 
    return isWin;
 }
 
 //유닛 생성
-const createUnit = (locUnits, idx, unitStr, grade, isUnitBuff) => {
+const createUnit = (locUnits, idx, unitStr, grade) => {
    let gradeText = grade === 1 ? '' : grade === 2 ? '중급 ' : '상급 ';
 
    for (let i = 0; i < locUnits.length; i++) {
@@ -1118,7 +1168,7 @@ const monsterSpawn = async (logs, locMonsters, displayMonsters, stage, wave) => 
    //소환
    for (let i = 0; i < locRandom.length; i++) {
       if (!locMonsters[locRandom[i] - 1][6]) {
-         locMonsters[locRandom[i] - 1][6] = new Monster('몹몹', Math.floor(Math.random() * 2), 'F', 5, 10, 0, null);
+         locMonsters[locRandom[i] - 1][6] = new Monster('몹몹', Math.floor(Math.random() * 2), 'F', 1, 1, 0, null);
          displayMonsters.push(locMonsters[locRandom[i] - 1][6]);
          locMonsters[locRandom[i] - 1][6]['displayLoc'] = displayMonsters.length - 1;
       }
@@ -1270,15 +1320,30 @@ const buffItemControl = (locUnits, isBuff) => {
    }
 };
 
-function endGame(isWin) {
+function endGame(isWin, level, achievement) {
+   let isAchive = false;
    if (isWin) {
       //승리 화면
+
       //업적 처리
-      //초기 화면 이동
-   } else {
-      //패배 화면
+      if (level === 1 && !achievement.isLvEasy) {
+         achievement.isLvEasy = true;
+         isAchive = true;
+      } else if (level === 2 && !achievement.isLvNomal) {
+         achievement.isLvNomal = true;
+         isAchive = true;
+      } else if (level === 3 && !achievement.isLvHard) {
+         achievement.isLvHard = true;
+         isAchive = true;
+      } else if (level === 4 && !achievement.isLvHell) {
+         achievement.isLvHell = true;
+         isAchive = true;
+      }
+
       //초기 화면 이동
    }
+
+   displayEnd(isWin, isAchive, level);
 }
 
 const createInventory = () => {
@@ -1327,11 +1392,25 @@ const getBlankLength = (col, str) => {
 const checkKillCount = (logs, achievement) => {
    if (achievement.killCount === 10) {
       achievement.isMosterKill01 = true;
+      logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MONSTER_KILL01_NAME} 획득!!!`));
    } else if (achievement.killCount === 100) {
       achievement.isMosterKill02 = true;
+      logsPush(logs, chalk.yellowBright(`[업적] ${evemens.ACHIVE_MONSTER_KILL02_NAME} 획득!!!`));
    } else if (achievement.killCount === 500) {
       achievement.isMosterKill03 = true;
+      logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MONSTER_KILL03_NAME} 획득!!!`));
    } else if (achievement.killCount === 1000) {
       achievement.isMosterKill04 = true;
+      logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MONSTER_KILL04_NAME} 획득!!!`));
+   }
+};
+
+const checkAhchiveUnit = (logs, achievement, unitKind) => {
+   if (unitKind === 0) {
+      achievement.isMeleeMaxGrade = true;
+      logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_MELEE_MAX_GRADE_NAME} 획득!!!`));
+   } else if (unitKind === 1) {
+      achievement.isRangedMaxGrade = true;
+      logsPush(logs, chalk.yellowBright(`[업적] ${Achievemens.ACHIVE_RANGED_MAX_GRADE_NAME} 획득!!!`));
    }
 };
