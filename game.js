@@ -624,11 +624,12 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
       //회복 만피 체크
       if (castle.hp + heal > GameSystem.CASTLE_MAX_HP) {
          castle.hp = GameSystem.CASTLE_MAX_HP;
+         heal = GameSystem.CASTLE_MAX_HP - castle.hp;
       } else {
          castle.hp += heal;
       }
 
-      logsPush(logs, chalk.green(``));
+      logsPush(logs, chalk.white(`다음 스테이지가 진행되어 성의 체력이 ${heal} 만큼 회복되었습니다.`));
    }
    //Stage 시작 시 몬스터 소환
    monsterSpawn(logs, locMonsters, displayMonsters, stage, wave, difficulty);
@@ -816,7 +817,7 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
                      //성공, 실패 결과 유닛
                      let unitType = Math.floor(Math.random() * 2) + 1; // 0,1
 
-                     // 80%의 성공 확률
+                     // 성공 확률
                      if (Math.floor(Math.random() * 100) < GameSystem.GRADE2_SUCCESS_PER) {
                         if (unitGrade1MCnt >= 2 && unitGrade1RCnt >= 2) {
                            for (let i = 0; i < 2; i++) {
@@ -1198,7 +1199,6 @@ const monsterSpawn = async (logs, locMonsters, displayMonsters, stage, wave, dif
       ['비홀더', '키메라', '가고일', '리치', '스펙터', '와이번', '임프', '나가', '라미아', '드래곤'],
    ];
 
-   //몬스터 유형 [체력 상 공격 하 , 체력 하 공격 상, 체력 중 공격 중, 체력 상, 공격 상  ]
    let damage = Math.floor(difficulty * (stage / 2) + (Math.random() * 5 + 1));
    let hp = 10 + Math.floor(difficulty * (stage / 2) + (Math.random() * 20 + 1));
 
