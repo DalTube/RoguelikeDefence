@@ -31,7 +31,11 @@ export const MAX_WAVE = 5;
 export const MAX_TURN = 3;
 
 /******
- *
+ * 성 체력
  */
-
 export const CASTLE_MAX_HP = 1000;
+
+/*****
+ * 유닛 소모
+ */
+export const UNIT_USE_CNT = 3;
