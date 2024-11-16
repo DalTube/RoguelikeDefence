@@ -8,7 +8,6 @@ import * as Items from './constants/items.js';
 import * as Achievemens from './constants/achievements.js';
 import * as GameSystem from './constants/settings.js';
 import { logsPush } from './utils/utils.js';
-import * as Settings from './settings.js';
 import figlet from 'figlet';
 
 function displayEnd(isWin, isAchive, difficulty) {
@@ -619,6 +618,18 @@ const battle = async (stage, castle, isWin, locUnits, inventory, itemBuffTurn, a
    let unitStr = ['근접', '원거리', '버퍼']; //유닛 종류
    let itemStr = [Items.ITEM_CODE01_NAME, Items.ITEM_CODE02_NAME, Items.ITEM_CODE03_NAME];
 
+   if (stage > 1 && castle.hp < GameSystem.CASTLE_MAX_HP) {
+      let heal = Math.floor(Math.random() * 100 + 1);
+
+      //회복 만피 체크
+      if (castle.hp + heal > GameSystem.CASTLE_MAX_HP) {
+         castle.hp = GameSystem.CASTLE_MAX_HP;
+      } else {
+         castle.hp += heal;
+      }
+
+      logsPush(logs, chalk.green(``));
+   }
    //Stage 시작 시 몬스터 소환
    monsterSpawn(logs, locMonsters, displayMonsters, stage, wave, difficulty);
 
@@ -1113,10 +1124,9 @@ export async function startGame(achievement, difficulty) {
       [false, false, false],
    ];
 
-   while (stage <= GameSystem.MAX_STAGE) {
+   while (stage <= GameSystem.MAX_STAGE && castle.hp > 0) {
       isWin = await battle(stage, castle, isWin, locUnits, inventory, itemBuffTurn, achievement, difficulty);
       // 스테이지 클리어 및 게임 종료 조건
-
       //최종스테이지고 isWin = true면 클리어 아니면 패배
       stage++;
    }
@@ -1145,7 +1155,7 @@ const createUnit = (locUnits, idx, unitStr, grade) => {
 //유닛 조합
 const mixUnit = (locUnits, unitGradeArr, choiceMix, unitStr, grade) => {
    //하위 재료 삭제(자리 확보)
-   for (let i = 0; i < Settings.useUnitCnt; i++) {
+   for (let i = 0; i < GameSystem.UNIT_USE_CNT; i++) {
       locUnits[unitGradeArr[i]][choiceMix - 1] = false;
    }
 
@@ -1284,6 +1294,8 @@ const turnEndAction = async (logs, locUnits, locMonsters, castle, inventory, dis
                         break;
                      }
                   }
+
+                  if (isAttack) break;
                }
             }
          }
