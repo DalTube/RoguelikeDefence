@@ -1,4 +1,4 @@
-## CH2.Rogue like - JAVASCRIPT 과제
+## **CASTLE DEFENCE GAME**
 ---
 
 #### **게임 / 전투 기획**
