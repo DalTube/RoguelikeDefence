@@ -1,12 +1,13 @@
 export class Unit {
    //유닛
-   constructor(name, type, grade, damage, critical, isItemBuff, isUnitBuff) {
+   // constructor(name, type, grade, damage, critical, isItemBuff, isUnitBuff) {
+
+   constructor(name, type, grade, damage, isItemBuff, isUnitBuff) {
       this._name = name;
       this._type = type;
       this._grade = grade;
       this._damage = damage;
-      this._critical = critical;
-      this._maxGrade = 3;
+      this._critical = 0;
       this._isItemBuff = isItemBuff;
       this._isUnitBuff = isUnitBuff;
    }
